@@ -23,3 +23,24 @@ model Track {
   createdAt DateTime @default(now())
 }
 
+model User {
+  id       Int       @id @default(autoincrement())
+  username String    @unique
+  profileImageUrl  String? 
+  password String
+  favorites Favorite[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+model Favorite {
+  id      Int     @id @default(autoincrement())
+  trackId Int  // идентификатор трека, который добавляется в избранное
+  user    User    @relation(fields: [userId], references: [id])
+  userId  Int
+  createdAt DateTime @default(now())
+}
+
+
+
