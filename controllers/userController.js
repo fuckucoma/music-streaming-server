@@ -1,5 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcrypt');
 const SALT_ROUNDS = 10;
 const jwt = require('jsonwebtoken');
@@ -33,7 +35,7 @@ exports.login = async (req, res) => {
   const { username, password } = req.body;
 
   // Добавьте логирование для отладки
-  console.log(`Login attempt for username: ${username}`);
+  console.log(`Login attempt for username: ${username}`+'  '+ `user file: ${username}` );
 
   try {
     const user = await prisma.user.findUnique({ where: { username } });
@@ -83,11 +85,30 @@ exports.uploadProfileImage = async (req, res) => {
       return res.status(400).json({ error: 'Файл не загружен' });
     }
 
-    const profileImageUrl = `${req.protocol}://${req.get('host')}/upload/${req.file.filename}`;
+    const profileImageUrl = `${req.protocol}://${req.get('host')}/avatars/${req.file.filename}`;
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (user.profileImageUrl != null) {
+      
+      const oldProfileImageUrl = path.join(__dirname,  '..', 'public' , user.profileImageUrl);
+
+      if (fs.existsSync(oldProfileImageUrl)) {
+        try {
+          fs.unlinkSync(oldProfileImageUrl);
+          console.log('Старая фотография профиля успешно удалена:', oldProfileImageUrl);
+        } catch (err) {
+          console.error('Ошибка при удалении старой фотографии профиля:', err);
+        }
+      }
+      
+    }
+      
     await prisma.user.update({
       where: { id: userId },
-      data: { profileImageUrl }
+      data: { profileImageUrl}
     });
 
     console.log('Profile image updated for userId:', userId);
@@ -116,6 +137,38 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params; // ID пользователя из параметра запроса
+
+    // Получаем данные пользователя
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    // Если у пользователя есть аватар, удаляем файл
+    if (user.profileImageUrl) {
+      const profileImagePath = path.join(__dirname, '..', 'public', user.profileImageUrl);
+
+      if (fs.existsSync(profileImagePath)) {
+        fs.unlinkSync(profileImagePath); 
+      }
+    }
+
+    await prisma.user.delete({
+      where: { id: parseInt(id) }
+    });
+
+    res.status(200).json({ message: 'Пользователь и все связанные данные успешно удалены' });
+  } catch (error) {
+    console.error('Ошибка при удалении пользователя:', error);
+    res.status(500).json({ error: 'Ошибка при удалении пользователя' });
+  }
+};
 
 exports.getUserProfile = async (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];

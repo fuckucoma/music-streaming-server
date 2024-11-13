@@ -20,6 +20,8 @@ exports.addTrack = async (req, res) => {
       data: { title, artist, imageUrl, filename: audioUrl, createdAt: new Date() }
     });
 
+    console.log(data);
+
     res.status(201).json({ message: 'Трек успешно загружен и добавлен в базу данных', track });
   } catch (error) {
     res.status(500).json({ error: 'Ошибка при добавлении трека' });
