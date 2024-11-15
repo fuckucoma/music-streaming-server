@@ -3,10 +3,10 @@ const router = express.Router();
 const favoriteController = require('../controllers/favoriteController');
 const { authenticateToken } = favoriteController;
 
-router.post('/favorites', authenticateToken, favoriteController.addFavorite);
+router.post('/add', authenticateToken, favoriteController.addFavorite);
 
-router.get('/favorites', authenticateToken, favoriteController.getFavorites);
+router.get('/get', authenticateToken, favoriteController.getFavorites);
 
-module.exports = router;
+router.post('/remove', authenticateToken, favoriteController.removeFavorite);
 
 module.exports = router;

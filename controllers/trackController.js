@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const prisma = new PrismaClient();
 
-exports.addTrack = async (req, res) => {
+exports.addTrack = async (req, res) => { 
   try {
     const { title, artist } = req.body;
     const imageFile = req.files['image'] ? req.files['image'][0] : null;
@@ -16,17 +16,28 @@ exports.addTrack = async (req, res) => {
     const imageUrl = imageFile.filename;
     const audioUrl = audioFile.filename;
 
+    // Логируем данные перед сохранением
+    console.log('Title:', title);
+    console.log('Artist:', artist);
+    console.log('Image URL:', imageUrl);
+    console.log('Audio URL:', audioUrl);
+
+    // Пытаемся сохранить данные в базу данныхo
     const track = await prisma.track.create({
       data: { title, artist, imageUrl, filename: audioUrl, createdAt: new Date() }
     });
 
-    console.log(data);
+    // Логируем успешный результат
+    console.log('Track created:', track);
 
     res.status(201).json({ message: 'Трек успешно загружен и добавлен в базу данных', track });
   } catch (error) {
+    console.error('Error during track upload:', error);  // Логируем подробную ошибку
+
     res.status(500).json({ error: 'Ошибка при добавлении трека' });
   }
 };
+
 
 
 exports.getTracks = async (req, res) => {
@@ -47,7 +58,6 @@ exports.getTracks = async (req, res) => {
   }
 };
 
-// Метод для стриминга трека
 exports.streamTrack = async (req, res) => {
   try {
     const trackId = parseInt(req.params.id);

@@ -49,8 +49,7 @@ exports.login = async (req, res) => {
       console.log(`Invalid password for user: ${username}`);
       return res.status(401).json({ error: 'Неверные учетные данные' });
     }
-
-    // Создание JWT
+    
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     console.log(`User logged in successfully: ${username}`);
@@ -103,7 +102,6 @@ exports.uploadProfileImage = async (req, res) => {
           console.error('Ошибка при удалении старой фотографии профиля:', err);
         }
       }
-      
     }
       
     await prisma.user.update({

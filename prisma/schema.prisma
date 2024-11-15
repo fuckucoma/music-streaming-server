@@ -1,46 +1,40 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model Track {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   title     String
   artist    String
-  album     String?  // Альбом, если есть
-  imageUrl  String?  // URL обложки, если есть
-  filename  String   @unique
-  createdAt DateTime @default(now())
+  filename  String     @unique
+  createdAt DateTime   @default(now())
+  album     String?
+  imageUrl  String?
+  favorites Favorite[]
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  username String    @unique
-  profileImageUrl  String? 
-  password String
-  favorites Favorite[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id              Int        @id @default(autoincrement())
+  username        String     @unique
+  profileImageUrl String?
+  password        String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  favorites       Favorite[]
 }
 
 model Favorite {
-  id      Int     @id @default(autoincrement())
-  trackId Int  // идентификатор трека, который добавляется в избранное
-  user    User    @relation(fields: [userId], references: [id])
-  userId  Int
-  createdAt DateTime @default(now())
+  favoriteId Int      @id @default(autoincrement())
+  trackId    Int
+  userId     Int
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+  track      Track    @relation(fields: [trackId], references: [id])
+
+  @@unique([userId, trackId])
 }
-
-
-
