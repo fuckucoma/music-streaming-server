@@ -2,6 +2,10 @@ const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 const fs = require('fs');
 const prisma = new PrismaClient();
+const mm = require('music-metadata');
+const { parseFile } = require('music-metadata');
+const ffmpeg = require('fluent-ffmpeg');
+const ffprobe = require('ffprobe');
 
 exports.addTrack = async (req, res) => { 
   try {
@@ -32,7 +36,7 @@ exports.addTrack = async (req, res) => {
 
     res.status(201).json({ message: 'Трек успешно загружен и добавлен в базу данных', track });
   } catch (error) {
-    console.error('Error during track upload:', error);  // Логируем подробную ошибку
+    console.error('Error during track upload:', error); 
 
     res.status(500).json({ error: 'Ошибка при добавлении трека' });
   }
@@ -147,7 +151,91 @@ exports.search = async (req, res) => {
   }
 };
 
-// Метод для удаления трека
+exports.uploadMultipleTracks = async (req, res) => {
+  try {
+    const files = req.files;
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'Нет файлов для загрузки' });
+    }
+
+    const uploadedTracks = [];
+
+    // Обрабатываем каждый файл
+    for (const file of files) {
+      const filePath = path.join(__dirname, '..', 'public', 'tracks', file.filename);
+      let trackTitle = path.parse(file.originalname).name; // Берем название из исходного имени файла
+      let trackArtist = "Unknown"; // Заглушка для артиста
+      let imageUrl = null;
+
+      let metadata = null;
+      try {
+        // Извлекаем метаданные с помощью ffmpeg
+        metadata = await extractMetadata(filePath);
+        trackArtist = metadata.artist || trackArtist;
+        trackTitle = metadata.title || trackTitle;
+        imageUrl = metadata.imageUrl; // Изображение из метаданных
+        console.log('Метаданные трека:', metadata);
+      } catch (err) {
+        console.warn(`Ошибка чтения метаданных для файла ${file.originalname}:`, err.message);
+      }
+
+      // Сохраняем информацию о треке в базе данных
+      const track = await prisma.track.create({
+        data: {
+          title: trackTitle,
+          artist: trackArtist,
+          filename: file.filename,
+          createdAt: new Date(),
+          imageUrl: imageUrl, // Привязываем изображение, если оно есть
+        }
+      });
+
+      uploadedTracks.push(track); // Добавляем трек в список загруженных
+    }
+
+    // Отправляем ответ клиенту
+    res.status(201).json({
+      message: 'Треки успешно загружены',
+      tracks: uploadedTracks
+    });
+  } catch (error) {
+    console.error('Ошибка при массовой загрузке треков:', error);
+    res.status(500).json({ error: 'Ошибка при массовой загрузке треков' });
+  }
+};
+
+async function extractMetadata(filePath) {
+  return new Promise((resolve, reject) => {
+    ffprobe(filePath, (err, metadata) => {
+      if (err) return reject(err);
+
+      // Извлечение изображения, если оно есть
+      const cover = metadata.streams.find((stream) => stream.codec_name === 'mjpeg');
+      if (cover) {
+        const imagePath = path.join(__dirname, '..', 'public', 'images', `${path.basename(filePath)}.jpg`);
+        fs.writeFileSync(imagePath, cover.data); // Сохраняем изображение на диск
+
+        // Возвращаем метаданные
+        resolve({
+          title: metadata.format.tags.title,
+          artist: metadata.format.tags.artist,
+          album: metadata.format.tags.album,
+          imageUrl: `/images/${path.basename(filePath)}.jpg`, // URL для изображения
+        });
+      } else {
+        // Возвращаем метаданные без изображения, если оно отсутствует
+        resolve({
+          title: metadata.format.tags.title,
+          artist: metadata.format.tags.artist,
+          album: metadata.format.tags.album,
+          imageUrl: null,
+        });
+      }
+    });
+  });
+}
+
+
 exports.deleteTrack = async (req, res) => {
   try {
     const trackId = parseInt(req.params.id);

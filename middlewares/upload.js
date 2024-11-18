@@ -4,9 +4,10 @@ const path = require('path');
 // Настройка для загрузки треков и изображений треков
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    console.log('fieldname:', file.fieldname);
     if (file.fieldname === 'image') {
       cb(null, path.join(__dirname, '..', 'public', 'images'));
-    } else if (file.fieldname === 'track') {
+    } else if (file.fieldname === 'track'|| file.fieldname === 'tracks') {
       cb(null, path.join(__dirname, '..', 'public', 'tracks'));
     } else {
       cb(new Error('Некорректное поле для загрузки файла'));

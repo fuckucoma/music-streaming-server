@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
+const JWT_SECRET = process.env.JWT_SECRET || '2b7e151628aed2a6abf7158809cf4f3c762e7160d7a7988dc1d0d3c4c8a7e7efe';
 
 const authenticateToken = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1];
@@ -19,7 +19,7 @@ const authenticateToken = (req, res, next) => {
     }
   };
 
-  exports.addFavorite = async (req, res) => {
+exports.addFavorite = async (req, res) => {
     const { trackId } = req.body;
 
 
@@ -27,7 +27,7 @@ const authenticateToken = (req, res, next) => {
     console.log("Request Track ID:", trackId);
 
     try {
-        // Проверка, добавлен ли уже этот трек в избранное
+        
         const existingFavorite = await prisma.favorite.findUnique({
             where: {
                 userId_trackId: {
@@ -77,27 +77,27 @@ exports.removeFavorite = async (req, res) => {
     }
 };
 
-
 exports.getFavorites = async (req, res) => {
   try {
       const favorites = await prisma.favorite.findMany({
           where: { userId: req.userId },
           include: {
-              track: true // Включаем связанные данные о треке
+              track: true
           }
       });
 
-      // Определяем базовый URL для изображений
+      
       const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
 
-      // Модифицируем ответ, добавляя полный путь к изображению
+      
       const favoriteTracks = favorites.map(fav => ({
           favoriteid: fav.favoriteid,
           trackId: fav.trackId,
           title: fav.track.title, 
           artist: fav.track.artist,
           imageUrl: fav.track.imageUrl ? `${baseUrl}/images/${fav.track.imageUrl}` : null,
-          filename: fav.track.filename
+          filename: fav.track.filename,
+          createdAt: fav.track.createdAt
       }));
 
       res.status(200).json({ favorites: favoriteTracks });

@@ -49,11 +49,15 @@ exports.login = async (req, res) => {
       console.log(`Invalid password for user: ${username}`);
       return res.status(401).json({ error: 'Неверные учетные данные' });
     }
+
+  
+    const admin = user.isAdmin;
+   
     
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     console.log(`User logged in successfully: ${username}`);
-    res.status(200).json({ message: 'Вход выполнен успешно', token });
+    res.status(200).json({ message: 'Вход выполнен успешно', token , admin});
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Ошибка входа' });
@@ -119,6 +123,11 @@ exports.uploadProfileImage = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
+
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Доступ запрещен' });
+    }
+
       const users = await prisma.user.findMany({
           select: {
               id: true,
@@ -137,9 +146,12 @@ exports.getAllUsers = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    const { id } = req.params; // ID пользователя из параметра запроса
+    const { id } = req.params; 
 
-    // Получаем данные пользователя
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Доступ запрещен' });
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: parseInt(id) }
     });
@@ -148,7 +160,7 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    // Если у пользователя есть аватар, удаляем файл
+
     if (user.profileImageUrl) {
       const profileImagePath = path.join(__dirname, '..', 'public', user.profileImageUrl);
 
@@ -186,6 +198,7 @@ exports.getUserProfile = async (req, res) => {
         profileImageUrl: true,
         createdAt: true,
         updatedAt: true
+        //isAdmin:false
       }
     });
 
