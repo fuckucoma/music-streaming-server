@@ -5,19 +5,25 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || '2b7e151628aed2a6abf7158809cf4f3c762e7160d7a7988dc1d0d3c4c8a7e7efe';
 
 const authenticateToken = (req, res, next) => {
-    const token = req.headers['authorization']?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Токен не предоставлен' });
-    }
+    const authHeader = req.headers['authorization'];
+    console.log('Authorization Header:', authHeader);
     
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      req.userId = decoded.userId;
-      next();
-    } catch (error) {
-      return res.status(403).json({ error: 'Недействительный токен' });
+    const token = authHeader?.split(' ')[1];
+    if (!token) {
+        console.log('Токен отсутствует');
+        return res.status(401).json({ error: 'Токен не предоставлен' });
     }
-  };
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        console.log('Decoded Token:', decoded);
+        req.userId = decoded.userId;
+        next();
+    } catch (error) {
+        console.error('Ошибка проверки токена:', error.message);
+        return res.status(403).json({ error: 'Недействительный токен' });
+    }
+};
 
 exports.addFavorite = async (req, res) => {
     const { trackId } = req.body;
