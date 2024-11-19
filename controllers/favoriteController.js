@@ -97,7 +97,7 @@ exports.getFavorites = async (req, res) => {
           artist: fav.track.artist,
           imageUrl: fav.track.imageUrl ? `${baseUrl}/images/${fav.track.imageUrl}` : null,
           filename: fav.track.filename,
-          createdAt: fav.track.createdAt
+          createdAt: fav.track.createdAt,
       }));
 
       res.status(200).json({ favorites: favoriteTracks });
