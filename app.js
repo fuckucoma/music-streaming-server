@@ -17,12 +17,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false }
-}));
+//app.use(session({
+  //secret: process.env.SESSION_SECRET,
+  //resave: false,
+  //saveUninitialized: false,
+  //cookie: { secure: false }
+//}));
 
 
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
@@ -33,7 +33,7 @@ app.use('/users', require('./routes/userRoutes'));
 app.use('/tracks', require('./routes/trackRoutes'));
 app.use('/favorites', require('./routes/favoriteRoutes'));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);
 });
