@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { uploadAvatar } = require('../middlewares/upload');
 
 const JWT_SECRET = process.env.JWT_SECRET; 
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];

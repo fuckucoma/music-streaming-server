@@ -5,7 +5,7 @@ const fs = require('fs');
 const bcrypt = require('bcrypt');
 const SALT_ROUNDS = 10;
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || '906063f946abce0013626fb0a2737d3bdb263a3b7f264bd68283108a836c73a1'; // Используйте переменные окружения
+const JWT_SECRET = process.env.JWT_SECRET; // Используйте переменные окружения
 const JWT_EXPIRES_IN = '12h';
 
 exports.register = async (req, res) => {
