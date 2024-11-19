@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 const fs = require('fs');
 const prisma = new PrismaClient();
+require('dotenv').config();
 const mm = require('music-metadata');
 const { parseFile } = require('music-metadata');
 const ffmpeg = require('fluent-ffmpeg');
