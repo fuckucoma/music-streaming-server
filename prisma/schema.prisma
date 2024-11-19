@@ -1,10 +1,11 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native","debian-opessl-3.0.x"]
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model Track {
