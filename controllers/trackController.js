@@ -47,7 +47,7 @@ exports.addTrack = async (req, res) => {
 exports.getTracks = async (req, res) => {
   try {
     const tracks = await prisma.track.findMany();
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const baseUrl = "https://music-streaming-server-lfon.onrender.com";
 
     const tracksWithFullUrl = tracks.map(track => ({
       ...track,

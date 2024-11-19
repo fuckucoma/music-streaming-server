@@ -24,7 +24,6 @@ app.use((req, res, next) => {
   //cookie: { secure: false }
 //}));
 
-
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use('/tracks', express.static(path.join(__dirname, 'public', 'tracks')));
 app.use('/avatars', express.static(path.join(__dirname, 'public','avatars')));
