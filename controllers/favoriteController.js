@@ -99,7 +99,7 @@ exports.getFavorites = async (req, res) => {
         const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
   
         const favoriteTracks = favorites.map(fav => ({
-            favoriteid: fav.favoriteid,
+            favoriteId: fav.favoriteId,
             trackId: fav.trackId,
             title: fav.track.title, 
             artist: fav.track.artist,
