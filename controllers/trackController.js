@@ -50,10 +50,16 @@ exports.getTracks = async (req, res) => {
     const tracks = await prisma.track.findMany();
     const baseUrl = "https://music-streaming-server-lfon.onrender.com";
 
+    // Перемешиваем треки с помощью алгоритма Фишера-Йетса
+    for (let i = tracks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tracks[i], tracks[j]] = [tracks[j], tracks[i]];
+    }
+
     const tracksWithFullUrl = tracks.map(track => ({
       ...track,
       imageUrl: track.imageUrl ? `${baseUrl}/images/${track.imageUrl}` : null,
-      filename: track.filename
+      filename: track.filename,
     }));
 
     res.json(tracksWithFullUrl);

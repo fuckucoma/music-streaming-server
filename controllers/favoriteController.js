@@ -85,34 +85,36 @@ exports.removeFavorite = async (req, res) => {
 };
 
 exports.getFavorites = async (req, res) => {
-  try {
-      const favorites = await prisma.favorite.findMany({
-          where: { userId: req.userId },
-          include: {
-              track: true
-          }
-      });
+    try {
+        const favorites = await prisma.favorite.findMany({
+            where: { userId: req.userId },
+            include: {
+                track: true,
+            },
+            orderBy: {
+                favoriteid: 'desc', // Сортируем по `favoriteid` в порядке убывания
+            },
+        });
+  
+        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  
+        const favoriteTracks = favorites.map(fav => ({
+            favoriteid: fav.favoriteid,
+            trackId: fav.trackId,
+            title: fav.track.title, 
+            artist: fav.track.artist,
+            imageUrl: fav.track.imageUrl ? `${baseUrl}/images/${fav.track.imageUrl}` : null,
+            filename: fav.track.filename,
+            createdAt: fav.track.createdAt,
+        }));
+  
+        res.status(200).json({ favorites: favoriteTracks });
+    } catch (error) {
+        console.error('Ошибка при получении избранного:', error);
+        res.status(500).json({ error: 'Ошибка получения избранного' });
+    }
+  };
 
-      
-      const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-
-      
-      const favoriteTracks = favorites.map(fav => ({
-          favoriteid: fav.favoriteid,
-          trackId: fav.trackId,
-          title: fav.track.title, 
-          artist: fav.track.artist,
-          imageUrl: fav.track.imageUrl ? `${baseUrl}/images/${fav.track.imageUrl}` : null,
-          filename: fav.track.filename,
-          createdAt: fav.track.createdAt,
-      }));
-
-      res.status(200).json({ favorites: favoriteTracks });
-  } catch (error) {
-      console.error('Ошибка при получении избранного:', error);
-      res.status(500).json({ error: 'Ошибка получения избранного' });
-  }
-};
 module.exports = { 
   addFavorite: exports.addFavorite, 
   getFavorites: exports.getFavorites, 
