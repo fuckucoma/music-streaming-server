@@ -92,7 +92,7 @@ exports.getFavorites = async (req, res) => {
                 track: true,
             },
             orderBy: {
-                favoriteid: 'desc', // Сортируем по `favoriteid` в порядке убывания
+                favoriteId: 'desc', // Сортируем по `favoriteid` в порядке убывания
             },
         });
   
