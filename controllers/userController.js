@@ -55,7 +55,7 @@ exports.login = async (req, res) => {
     const admin = user.isAdmin;
    
     
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     console.log(`User logged in successfully: ${username}`);
     res.status(200).json({ message: 'Вход выполнен успешно', token , admin});
@@ -138,7 +138,7 @@ exports.getAllUsers = async (req, res) => {
               updatedAt: true
           }
       });
-      res.status(200).json(users);
+      res.status(200).json({ users });
   } catch (error) {
       console.error("Ошибка при получении списка пользователей:", error);
       res.status(500).json({ error: "Ошибка при получении списка пользователей" });

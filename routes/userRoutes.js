@@ -31,8 +31,8 @@ const authenticateToken = (req, res, next) => {
   router.post('/logout', userController.logout);
   router.post('/uploadProfileImage', authenticateToken, uploadAvatar.single('profileImage'), userController.uploadProfileImage);
   router.get('/profile', authenticateToken, userController.getUserProfile);
-  router.get('/all', userController.getAllUsers);
-  router.delete('/delete/:id', userController.deleteUser);
+  router.get('/all', authenticateToken, userController.getAllUsers);
+  router.delete('/delete/:id', authenticateToken, userController.deleteUser);
 
   module.exports = router
   
