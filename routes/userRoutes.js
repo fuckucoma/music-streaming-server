@@ -26,6 +26,9 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+
+  router.put('/edit-pass', authenticateToken, userController.edit_pass);
+  router.put('/edit-username', authenticateToken, userController.edit_username);
   router.post('/register', userController.register);
   router.post('/login', userController.login);
   router.post('/logout', userController.logout);

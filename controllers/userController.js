@@ -6,8 +6,73 @@ const fs = require('fs');
 const bcrypt = require('bcrypt');
 const SALT_ROUNDS = 10;
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET; // Используйте переменные окружения
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '12h';
+
+exports.edit_pass = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Необходимы текущий и новый пароль' });
+  }
+
+  try {
+    // Получение пользователя из базы данных по userId из токена
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    // Проверка текущего пароля
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Текущий пароль неверен' });
+    }
+
+    // Хеширование нового пароля
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Обновление пароля в базе данных
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    res.status(200).json({ message: 'Пароль успешно изменен' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ error: 'Ошибка при изменении пароля' });
+  }
+};
+
+exports.edit_username = async (req, res) => {
+  const { newUsername } = req.body;
+
+  if (!newUsername) {
+    return res.status(400).json({ error: 'Новое имя пользователя обязательно' });
+  }
+
+  try {
+    // Проверка, что новое имя пользователя не занято
+    const existingUser = await prisma.user.findUnique({ where: { username: newUsername } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Имя пользователя уже занято' });
+    }
+
+    // Обновление имени пользователя в базе данных
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { username: newUsername },
+    });
+
+    res.status(200).json({ message: 'Имя пользователя успешно изменено', username: updatedUser.username });
+  } catch (error) {
+    console.error('Error changing username:', error);
+    res.status(500).json({ error: 'Ошибка при изменении имени пользователя' });
+  }
+};
+
 
 exports.register = async (req, res) => {
   const { username, password } = req.body;
@@ -35,7 +100,6 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 
-  // Добавьте логирование для отладки
   console.log(`Login attempt for username: ${username}`+'  '+ `user file: ${username}` );
 
   try {
@@ -74,7 +138,6 @@ exports.logout = (req, res) => {
   });
 };
 
-// Метод загрузки изображения профиля
 exports.uploadProfileImage = async (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) {
