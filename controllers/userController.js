@@ -17,7 +17,7 @@ exports.edit_pass = async (req, res) => {
   }
 
   try {
-    // Получение пользователя из базы данных по userId из токена
+    
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
 
     if (!user) {
