@@ -242,6 +242,30 @@ async function extractMetadata(filePath) {
   });
 }
 
+exports.editTrack = async (req, res) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ error: 'Доступ запрещен' });
+  }
+
+  const { id } = req.params;
+  const { title, artist, album, genre } = req.body;
+
+  try {
+    const updatedTrack = await prisma.track.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        artist,
+        album,
+        genre,
+      },
+    });
+    res.status(200).json({ message: 'Трек обновлен', updatedTrack });
+  } catch (error) {
+    console.error('Ошибка обновления трека:', error);
+    res.status(500).json({ error: 'Ошибка обновления трека' });
+  }
+};
 
 exports.deleteTrack = async (req, res) => {
   try {

@@ -10,5 +10,6 @@ router.get('/:id/stream', trackController.streamTrack);
 router.delete('/delete/:id', trackController.deleteTrack); 
 router.get('/search', trackController.search);
 router.post('/upload-multiple', upload.array('tracks'), trackController.uploadMultipleTracks);
+router.put('/edit/:id', authenticateToken, trackController.editTrack);
 
 module.exports = router;

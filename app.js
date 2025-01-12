@@ -6,6 +6,9 @@ const morgan = require('morgan');
 const path = require('path');
 const exp = require('constants');
 
+const complaintRouter = require('./routes/complaintRouter');
+const reviewRouter = require('./routes/reviewRouter');
+const adminRouter = require('./routes/adminRouter');
 const app = express();
 
 app.use(express.json());
@@ -31,6 +34,12 @@ app.use('/avatars', express.static(path.join(__dirname, 'public','avatars')));
 app.use('/users', require('./routes/userRoutes'));
 app.use('/tracks', require('./routes/trackRoutes'));
 app.use('/favorites', require('./routes/favoriteRoutes'));
+app.use('/complaints', complaintRouter);
+app.use('/reviews', reviewRouter);
+app.use('/api/admin', adminRouter);
+
+
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
