@@ -3,6 +3,7 @@ const router = express.Router();
 require('dotenv').config();
 const trackController = require('../controllers/trackController');
 const { upload } = require('../middlewares/upload');
+const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET; 
 console.log('JWT_SECRET:', process.env.JWT_SECRET);
