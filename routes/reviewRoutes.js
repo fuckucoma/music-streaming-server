@@ -1,7 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const reviewController = require('../controllers/reviewController');
-const { authenticateToken } = require('../middlewares/authenticate');
+
+const JWT_SECRET = process.env.JWT_SECRET; 
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; 
+
+  if (!token) {
+    return res.sendStatus(401); 
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.sendStatus(403); 
+    }
+    req.user = user; 
+    next();
+  });
+};
 
 // POST: Создать отзыв
 router.post('/create', authenticateToken, reviewController.createReview);
