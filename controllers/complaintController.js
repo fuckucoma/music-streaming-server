@@ -13,6 +13,7 @@ exports.createComplaint = async (req, res) => {
     const complaint = await prisma.complaint.create({
       data: { userId, message },
     });
+    console.log('Complaint created:', complaint);
     res.status(201).json({ message: 'Жалоба успешно создана', complaint });
   } catch (error) {
     console.error('Ошибка создания жалобы:', error);
