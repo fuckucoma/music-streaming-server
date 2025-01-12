@@ -6,9 +6,9 @@ const morgan = require('morgan');
 const path = require('path');
 const exp = require('constants');
 
-const complaintRouter = require('./routes/complaintRouter');
-const reviewRouter = require('./routes/reviewRouter');
-const adminRouter = require('./routes/adminRouter');
+const complaintRouter = require('./routes/complaintRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
+const adminRouter = require('./routes/adminRoutes');
 const app = express();
 
 app.use(express.json());
