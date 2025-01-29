@@ -24,6 +24,28 @@ exports.createReview = async (req, res) => {
   }
 };
 
+exports.getReviewsForTrack = async (req, res) => {
+  try {
+    const trackId = parseInt(req.params.trackId, 10);
+    if (!trackId) {
+      return res.status(400).json({ error: 'trackId is invalid' });
+    }
+
+    const reviews = await prisma.review.findMany({
+      where: { trackId },
+      include: {
+        user: true, 
+        track: true,  
+      },
+    });
+
+    res.status(200).json(reviews);
+  } catch (err) {
+    console.error('Error fetching reviews for track:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 exports.getAllReviews = async (req, res) => {
   if (!req.user.isAdmin) {
     return res.status(403).json({ error: 'Доступ запрещен' });

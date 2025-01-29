@@ -23,13 +23,12 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// POST: Создать отзыв
 router.post('/create', authenticateToken, reviewController.createReview);
 
-// GET: Получить все отзывы (админ)
 router.get('/all', authenticateToken, reviewController.getAllReviews);
 
-// DELETE: Удалить отзыв
 router.delete('/delete/:id', authenticateToken, reviewController.deleteReview);
+
+router.get('/track/:trackId', authenticateToken, reviewController.getReviewsForTrack);
 
 module.exports = router;
