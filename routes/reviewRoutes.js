@@ -29,6 +29,8 @@ router.get('/all', authenticateToken, reviewController.getAllReviews);
 
 router.delete('/delete/:id', authenticateToken, reviewController.deleteReview);
 
+router.delete('/delete_user_review/:id', authenticateToken, reviewController.deleteUserReview);
+
 router.get('/track/:trackId', authenticateToken, reviewController.getReviewsForTrack);
 
 module.exports = router;

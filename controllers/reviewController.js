@@ -83,3 +83,30 @@ exports.deleteReview = async (req, res) => {
     res.status(500).json({ error: 'Ошибка удаления отзыва' });
   }
 };
+
+exports.deleteUserReview = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+
+  try {
+    // Получаем отзыв по ID
+    const review = await prisma.review.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    // Проверка, что отзыв принадлежит текущему пользователю
+    if (review.userId !== userId) {
+      return res.status(403).json({ error: 'Вы не можете удалить этот отзыв' });
+    }
+
+    // Удаляем отзыв
+    await prisma.review.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.status(200).json({ message: 'Отзыв удален' });
+  } catch (error) {
+    console.error('Ошибка удаления отзыва:', error);
+    res.status(500).json({ error: 'Ошибка удаления отзыва' });
+  }
+};
