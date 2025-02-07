@@ -15,7 +15,7 @@ exports.createReview = async (req, res) => {
 
   try {
     const review = await prisma.review.create({
-      data: { userId, trackId, content, rating },
+      data: { userId, trackId, content, rating, userProfileImage },
     });
     res.status(201).json({ message: 'Отзыв создан', review });
   } catch (error) {
