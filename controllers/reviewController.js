@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 exports.createReview = async (req, res) => {
-  const { trackId, content, rating } = req.body;
+  const { trackId, content, rating, userProfileImage } = req.body;
   const userId = req.user.userId;
 
   if (!trackId || !content || !rating) {
