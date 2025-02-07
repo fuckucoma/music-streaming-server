@@ -36,6 +36,7 @@ const authenticateToken = (req, res, next) => {
   router.get('/profile', authenticateToken, userController.getUserProfile);
   router.get('/all', authenticateToken, userController.getAllUsers);
   router.delete('/delete/:id', authenticateToken, userController.deleteUser);
+  router.get('/users/:id', getUserById);
 
   module.exports = router
   

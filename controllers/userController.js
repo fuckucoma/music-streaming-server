@@ -276,3 +276,50 @@ exports.getUserProfile = async (req, res) => {
     res.status(500).json({ error: 'Ошибка получения профиля пользователя' });
   }
 };
+
+exports.getUserById = async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Токен не предоставлен' });
+  }
+
+  try {
+    // Проверка валидности токена
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Получаем ID из параметров запроса
+    const userId = req.params.id;
+
+    // Ищем пользователя в базе данных
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        profileImageUrl: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Ошибка при получении пользователя:', error);
+    
+    // Обработка ошибок JWT
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ error: 'Неверный токен' });
+    }
+    
+    // Обработка ошибок неверного формата ID
+    if (error instanceof prisma.PrismaClientKnownRequestError && error.code === 'P2023') {
+      return res.status(400).json({ error: 'Неверный формат ID пользователя' });
+    }
+
+    res.status(500).json({ error: 'Ошибка сервера при получении пользователя' });
+  }
+};
