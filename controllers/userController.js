@@ -1,4 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require('@prisma/client')
+const { PrismaClientKnownRequestError } = require('@prisma/client');;
 require('dotenv').config();
 const prisma = new PrismaClient();
 const path = require('path');
@@ -286,9 +287,14 @@ exports.getUserById = async (req, res) => {
   try {
     // Проверка валидности токена
     const decoded = jwt.verify(token, JWT_SECRET);
-    
-    // Получаем ID из параметров запроса
-    const userId = req.params.id;
+
+    // Получаем ID из параметров запроса и преобразуем в число
+    const userId = parseInt(req.params.id, 10);
+
+    // Проверяем, что ID является числом
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Неверный формат ID пользователя' });
+    }
 
     // Ищем пользователя в базе данных
     const user = await prisma.user.findUnique({
@@ -309,14 +315,14 @@ exports.getUserById = async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     console.error('Ошибка при получении пользователя:', error);
-    
+
     // Обработка ошибок JWT
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({ error: 'Неверный токен' });
     }
-    
+
     // Обработка ошибок неверного формата ID
-    if (error instanceof prisma.PrismaClientKnownRequestError && error.code === 'P2023') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2023') {
       return res.status(400).json({ error: 'Неверный формат ID пользователя' });
     }
 
