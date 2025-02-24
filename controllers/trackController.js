@@ -48,7 +48,7 @@ exports.addTrack = async (req, res) => {
 exports.getTracks = async (req, res) => {
   try {
     const tracks = await prisma.track.findMany();
-    const baseUrl = "http://192.168.100.29:4000";
+    const baseUrl = "https://music-streaming-server-lfon.onrender.com";
 
     // Перемешиваем треки с помощью алгоритма Фишера-Йетса
     for (let i = tracks.length - 1; i > 0; i--) {
