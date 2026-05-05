@@ -12,12 +12,24 @@ const adminRouter = require('./routes/adminRoutes');
 const app = express();
 
 const corsOptions = {
-  origin: [
-    'https://tg-music-app-phi.vercel.app',
-    'http://localhost:5173',
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+
+    const allowed = [
+      'https://underlab-phi.vercel.app',
+      'http://localhost:5173',
+    ];
+
+    // Allow the fixed domain OR any Vercel preview for your project
+    if (allowed.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Range'],
+  allowedHeaders: ['Content-Type', 'Range', 'Authorization'],
   exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'],
 };
 
