@@ -11,16 +11,22 @@ const reviewRouter = require('./routes/reviewRoutes');
 const adminRouter = require('./routes/adminRoutes');
 const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('combined'));
-
-app.use(cors({
-  origin: ['https://tg-music-app-phi.vercel.app/', 'http://localhost:5173'],
+const corsOptions = {
+  origin: [
+    'https://tg-music-app-phi.vercel.app',
+    'http://localhost:5173',
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Range'],
   exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'],
-}));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('combined'));
 
 app.use((req, res, next) => {
   console.log(`Получен запрос на ${req.url}`);
@@ -44,7 +50,6 @@ app.use('/favorites', require('./routes/favoriteRoutes'));
 app.use('/complaints', complaintRouter);
 app.use('/reviews', reviewRouter);
 app.use('/api/admin', adminRouter);
-
 
 
 
