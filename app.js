@@ -15,6 +15,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
 
+app.use(cors({
+  origin: ['https://tg-music-app-phi.vercel.app/', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Range'],
+  exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'],
+}));
+
 app.use((req, res, next) => {
   console.log(`Получен запрос на ${req.url}`);
   next();
