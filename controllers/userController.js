@@ -130,13 +130,18 @@ exports.login = async (req, res) => {
   }
 };
 
+//exports.logout = (req, res) => {
+//  req.session.destroy((err) => {
+//      if (err) {
+//      return res.status(500).json({ error: 'Ошибка выхода' });
+//      }
+//res.status(200).json({ message: 'Выход выполнен' });
+//  });
+//};
+
 exports.logout = (req, res) => {
-  req.session.destroy((err) => {
-      if (err) {
-          return res.status(500).json({ error: 'Ошибка выхода' });
-      }
-      res.status(200).json({ message: 'Выход выполнен' });
-  });
+  // Sessions are disabled — JWT is stateless, just return success
+  res.status(200).json({ message: 'Выход выполнен' });
 };
 
 exports.uploadProfileImage = async (req, res) => {
