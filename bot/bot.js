@@ -48,20 +48,26 @@ async function extractCover(filePath, baseName) {
 }
 
 // ── Extract audio metadata ────────────────────────────────────
-async function extractMetadata(filePath, fallbackTitle) {
+async function extractMetadata(filePath, fallbackTitle, tgData = {}) {
   try {
     const metadata = await mm.parseFile(filePath);
+
     return {
-      title:    metadata.common.title   ?? fallbackTitle,
-      artist:   metadata.common.artist  ?? 'Unknown',
-      album:    metadata.common.album   ?? null,
-      genre:    metadata.common.genre?.[0] ?? null,
-      duration: metadata.format.duration
-        ? Math.round(metadata.format.duration)
-        : null,
+      title: metadata.common.title ?? tgData.title ?? fallbackTitle,
+      artist:metadata.common.artist ?? tgData.performer ?? 'Unknown',
+      album: metadata.common.album ?? null,
+      genre: metadata.common.genre?.[0] ?? null,
+      duration: metadata.format.duration  ? Math.round(metadata.format.duration) : tgData.duration ?? null,
     };
+
   } catch {
-    return { title: fallbackTitle, artist: 'Unknown', album: null, genre: null, duration: null };
+    return {
+      title: tgData.title ?? fallbackTitle,
+      artist: tgData.performer ?? 'Unknown',
+      album: null,
+      genre: null,
+      duration: tgData.duration ?? null,
+    };
   }
 }
 
@@ -149,7 +155,11 @@ function launch() {
       });
 
       const fallbackTitle = path.parse(originalName).name;
-      const meta = await extractMetadata(destPath, fallbackTitle);
+      const meta = await extractMetadata(destPath, fallbackTitle, {
+        title: msg.audio?.title,
+        performer: msg.audio?.performer,
+        duration: msg.audio?.duration,
+});
       const imageFilename = await extractCover(destPath, baseName);
 
       // Save to database — matches your exact Prisma schema
