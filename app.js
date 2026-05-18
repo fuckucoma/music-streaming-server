@@ -9,6 +9,7 @@ const exp = require('constants');
 const complaintRouter = require('./routes/complaintRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const adminRouter = require('./routes/adminRoutes');
+const bot = require('./bot/bot');
 const app = express();
 
 const corsOptions = {
@@ -68,4 +69,5 @@ app.use('/api/admin', adminRouter);
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);
+  bot.launch();
 });
