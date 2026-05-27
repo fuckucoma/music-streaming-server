@@ -4,18 +4,21 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
+
 
 model Track {
   id        Int        @id @default(autoincrement())
   title     String
   artist    String
-  filename  String     @unique
+  filename  String     // storage path in Supabase: "tracks/filename.mp3"
   createdAt DateTime   @default(now())
   album     String?
-  imageUrl  String?
+  imageUrl  String?    // full public URL from Supabase Storage
+  duration  Int?       // seconds
   genre       String?
   favorites Favorite[]
   reviews    Review[]

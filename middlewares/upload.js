@@ -1,36 +1,40 @@
 const multer = require('multer');
-const path = require('path');
 
-// Настройка для загрузки треков и изображений треков
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    console.log('fieldname:', file.fieldname);
-    if (file.fieldname === 'image') {
-      cb(null, path.join(__dirname, '..', 'public', 'images'));
-    } else if (file.fieldname === 'track'|| file.fieldname === 'tracks') {
-      cb(null, path.join(__dirname, '..', 'public', 'tracks'));
-    } else {
-      cb(new Error('Некорректное поле для загрузки файла'));
-    }
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+// Memory storage — files go to Supabase, not local disk
+const memoryStorage = multer.memoryStorage();
+
+const audioFilter = (req, file, cb) => {
+  const allowed = ['audio/mpeg', 'audio/mp3', 'audio/flac', 'audio/ogg',
+                   'audio/wav', 'audio/x-wav', 'audio/aac', 'audio/mp4',
+                   'audio/x-m4a', 'video/mp4'];
+  if (allowed.includes(file.mimetype) || file.mimetype.startsWith('audio/')) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Unsupported audio type: ${file.mimetype}`), false);
   }
+};
+
+const imageFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files allowed'), false);
+  }
+};
+
+// Track uploads (audio + optional image)
+exports.upload = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+  fileFilter: (req, file, cb) => {
+    if (file.fieldname === 'image') return imageFilter(req, file, cb);
+    return audioFilter(req, file, cb);
+  },
 });
 
-// Настройка для загрузки аватаров
-const avatarStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', 'public', 'avatars')); // Папка для аватаров
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+// Avatar uploads
+exports.uploadAvatar = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: imageFilter,
 });
-
-const upload = multer({ storage: storage });
-const uploadAvatar = multer({ storage: avatarStorage }); // Загрузка только аватаров
-
-module.exports = { upload, uploadAvatar };

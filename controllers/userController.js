@@ -5,10 +5,15 @@ const prisma = new PrismaClient();
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
-const SALT_ROUNDS = 10;
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '12h';
+
+const supabase = require('../lib/supabase');
+const SUPABASE_URL = process.env.SUPABASE_URL;
+
+const SALT_ROUNDS = 10;
+
 
 exports.edit_pass = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
@@ -146,48 +151,38 @@ exports.logout = (req, res) => {
 
 exports.uploadProfileImage = async (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'Токен не предоставлен' });
-  }
-
+  if (!token) return res.status(401).json({ error: 'No token' });
+ 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.userId;
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'Файл не загружен' });
+    const userId  = decoded.userId;
+ 
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+ 
+    const ext         = req.file.mimetype.includes('png') ? 'png' : 'jpg';
+    const storagePath = `avatars/${userId}_${Date.now()}.${ext}`;
+ 
+    // Upload to Supabase
+    const { error } = await supabase.storage
+      .from('images')
+      .upload(storagePath, req.file.buffer, { contentType: req.file.mimetype, upsert: true });
+    if (error) throw new Error(error.message);
+ 
+    const profileImageUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${storagePath}`;
+ 
+    // Delete old avatar from Supabase if it exists
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (user?.profileImageUrl?.includes('/storage/v1/object/public/images/')) {
+      const oldPath = user.profileImageUrl.split('/storage/v1/object/public/images/')[1];
+      if (oldPath) await supabase.storage.from('images').remove([oldPath]).catch(() => {});
     }
-
-    const profileImageUrl = `${req.protocol}://${req.get('host')}/avatars/${req.file.filename}`;
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (user.profileImageUrl != null) {
-      
-      const oldProfileImageUrl = path.join(__dirname,  '..', 'public' , user.profileImageUrl);
-
-      if (fs.existsSync(oldProfileImageUrl)) {
-        try {
-          fs.unlinkSync(oldProfileImageUrl);
-          console.log('Старая фотография профиля успешно удалена:', oldProfileImageUrl);
-        } catch (err) {
-          console.error('Ошибка при удалении старой фотографии профиля:', err);
-        }
-      }
-    }
-      
-    await prisma.user.update({
-      where: { id: userId },
-      data: { profileImageUrl}
-    });
-
-    console.log('Profile image updated for userId:', userId);
-    res.status(200).json({ message: 'Изображение профиля обновлено', profileImageUrl });
+ 
+    await prisma.user.update({ where: { id: userId }, data: { profileImageUrl } });
+ 
+    res.status(200).json({ message: 'Profile image updated', profileImageUrl });
   } catch (error) {
-    console.error('Error updating profile image:', error);
-    res.status(500).json({ error: 'Ошибка обновления изображения профиля' });
+    console.error('uploadProfileImage error:', error);
+    res.status(500).json({ error: 'Failed to update profile image' });
   }
 };
 
