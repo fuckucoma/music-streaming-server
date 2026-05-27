@@ -8,9 +8,7 @@ require('dotenv').config();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 
-// ── Helpers ───────────────────────────────────────────────────
 
-/** Upload a local file buffer to Supabase Storage, return public URL */
 async function uploadToSupabase(bucket, storagePath, fileBuffer, contentType) {
   const { error } = await supabase.storage
     .from(bucket)
@@ -22,13 +20,11 @@ async function uploadToSupabase(bucket, storagePath, fileBuffer, contentType) {
   return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${storagePath}`;
 }
 
-/** Delete a file from Supabase Storage by its storage path */
 async function deleteFromSupabase(bucket, storagePath) {
   if (!storagePath) return;
   await supabase.storage.from(bucket).remove([storagePath]).catch(() => {});
 }
 
-/** Extract storage path from a full Supabase public URL */
 function extractStoragePath(publicUrl, bucket) {
   if (!publicUrl) return null;
   const marker = `/object/public/${bucket}/`;
@@ -36,7 +32,6 @@ function extractStoragePath(publicUrl, bucket) {
   return idx !== -1 ? publicUrl.slice(idx + marker.length) : null;
 }
 
-/** Extract cover art from audio file, return buffer + mime */
 async function extractCoverBuffer(filePath) {
   try {
     const metadata = await mm.parseFile(filePath, { skipCovers: false });
@@ -48,7 +43,6 @@ async function extractCoverBuffer(filePath) {
   }
 }
 
-/** Extract audio metadata from file */
 async function extractMetadata(filePath, fallbackTitle) {
   try {
     const metadata = await mm.parseFile(filePath);
@@ -63,8 +57,6 @@ async function extractMetadata(filePath, fallbackTitle) {
     return { title: fallbackTitle, artist: 'Unknown', album: null, genre: null, duration: null };
   }
 }
-
-// ── Controllers ───────────────────────────────────────────────
 
 exports.addTrack = async (req, res) => {
   try {
@@ -102,7 +94,6 @@ exports.getTracks = async (req, res) => {
   try {
     const tracks = await prisma.track.findMany();
 
-    // Shuffle (Fisher-Yates)
     for (let i = tracks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [tracks[i], tracks[j]] = [tracks[j], tracks[i]];

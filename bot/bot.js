@@ -20,11 +20,29 @@ if (!BOT_TOKEN) {
 // ── Download file to /tmp ─────────────────────────────────────
 function downloadToTmp(url, dest) {
   return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(dest);
     https.get(url, res => {
+      // Ensure we actually got a successful response
+      if (res.statusCode !== 200) {
+        return reject(new Error(`Download failed: HTTP ${res.statusCode}`));
+      }
+      
+      const file = fs.createWriteStream(dest);
       res.pipe(file);
-      file.on('finish', () => file.close(resolve));
-    }).on('error', err => { fs.unlink(dest, () => {}); reject(err); });
+      
+      file.on('finish', () => {
+        file.close(resolve); 
+      });
+      
+      // Catch network stream interruptions
+      res.on('error', err => {
+        fs.unlink(dest, () => {}); 
+        reject(err);
+      });
+      
+    }).on('error', err => { 
+      fs.unlink(dest, () => {}); 
+      reject(err); 
+    });
   });
 }
 
@@ -38,20 +56,36 @@ async function uploadToSupabase(bucket, storagePath, buffer, contentType) {
 }
 
 // ── Extract metadata from tmp file ───────────────────────────
-async function extractMeta(filePath, fallback) {
+async function extractMeta(filePath, tgAudio, fallbackName) {
+  // 1. Establish a strong baseline using Telegram's built-in metadata
+  let meta = {
+    title:    tgAudio?.title ?? fallbackName,
+    artist:   tgAudio?.performer ?? 'Unknown',
+    album:    null,
+    genre:    null,
+    duration: tgAudio?.duration ?? null,
+    cover:    null
+  };
+
   try {
     const m = await mm.parseFile(filePath);
-    return {
-      title:    m.common.title   ?? fallback,
-      artist:   m.common.artist  ?? 'Unknown',
-      album:    m.common.album   ?? null,
-      genre:    m.common.genre?.[0] ?? null,
-      duration: m.format.duration ? Math.round(m.format.duration) : null,
-      cover:    m.common.picture?.[0] ?? null,
-    };
-  } catch {
-    return { title: fallback, artist: 'Unknown', album: null, genre: null, duration: null, cover: null };
+    
+    // 2. Only overwrite the baseline if mm successfully found the tags
+    if (m.common.title) meta.title = m.common.title;
+    if (m.common.artist) meta.artist = m.common.artist;
+    if (m.common.album) meta.album = m.common.album;
+    if (m.common.genre?.length) meta.genre = m.common.genre[0];
+    if (m.format.duration) meta.duration = Math.round(m.format.duration);
+    if (m.common.picture?.length) meta.cover = m.common.picture[0];
+    
+  } catch (err) {
+    // Log the error instead of failing silently!
+    console.warn(`[Bot] Metadata warning for ${fallbackName}: ${err.message}`);
+    // If it crashes (e.g., missing EOF marker), we safely return the Telegram baseline 
+    // instead of wiping everything to 'Unknown'.
   }
+
+  return meta;
 }
 
 function launch() {
@@ -93,7 +127,7 @@ function launch() {
 
       // Extract metadata
       await bot.editMessageText('⏳ Reading metadata…', { chat_id: chatId, message_id: statusMsg.message_id });
-      const meta = await extractMeta(tmpPath, path.parse(origName).name);
+      const meta = await extractMeta(tmpPath, msg.audio, path.parse(origName).name);
 
       // Upload audio to Supabase
       const audioBuffer  = fs.readFileSync(tmpPath);
