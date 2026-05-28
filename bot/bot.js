@@ -136,35 +136,46 @@ function launch() {
 
       // Upload cover if present
       let imageUrl = null;
-      if (meta.cover && meta.cover.data) {
+      let coverBuffer = null;
+      let coverMime = 'image/jpeg';
+
+      // 1. Пробуем Telegram thumb
+      const thumbArray = msg.audio?.thumb ?? msg.document?.thumb;
+      if (thumbArray && thumbArray.length > 0) {
         try {
-          const imgExt  = meta.cover.format?.includes('png') ? 'png' : 'jpg';
-          const imgPath = `${baseName}.${imgExt}`;
-          imageUrl = await uploadToSupabase('images', imgPath, meta.cover.data, meta.cover.format || `image/${imgExt}`);
+          const thumb = thumbArray[thumbArray.length - 1];
+          const thumbInfo = await bot.getFile(thumb.file_id);
+          const thumbUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${thumbInfo.file_path}`;
+          const thumbExt = path.extname(thumbInfo.file_path || '.jpg').toLowerCase();
+          const thumbTmp = `/tmp/thumb_${baseName}${thumbExt || '.jpg'}`;
+          
+          await downloadToTmp(thumbUrl, thumbTmp);
+          coverBuffer = fs.readFileSync(thumbTmp);
+          
+          if (thumbExt === '.png') coverMime = 'image/png';
+          else if (thumbExt === '.webp') coverMime = 'image/webp';
+          else coverMime = 'image/jpeg';
+          
+          fs.unlink(thumbTmp, () => {});
         } catch (err) {
-          console.warn('[Bot] Ошибка загрузки ID3 обложки:', err.message);
+          console.warn('[Bot] Telegram thumb failed:', err.message);
         }
       }
 
-      const tgThumb = msg.audio?.thumbnail || msg.audio?.thumb; 
-      if (!imageUrl && tgThumb) {
+      // 2. Если нет Telegram thumb — пробуем ID3
+      if (!coverBuffer && meta.cover?.data) {
+        coverBuffer = meta.cover.data;
+        coverMime = meta.cover.format || 'image/jpeg';
+      }
+
+      // 3. Загружаем в Supabase
+      if (coverBuffer) {
         try {
-          // Получаем путь к превьюшке на серверах Telegram
-          const thumbInfo = await bot.getFile(tgThumb.file_id);
-          const thumbUrl  = `https://api.telegram.org/file/bot${BOT_TOKEN}/${thumbInfo.file_path}`;
-          const thumbTmp  = `/tmp/thumb_${baseName}.jpg`;
-
-          // Скачиваем превьюшку во временную папку
-          await downloadToTmp(thumbUrl, thumbTmp);
-          const thumbBuffer = fs.readFileSync(thumbTmp);
-
-          // Загружаем в Supabase
-          imageUrl = await uploadToSupabase('images', `thumb_${baseName}.jpg`, thumbBuffer, 'image/jpeg');
-
-          // Подчищаем временный файл
-          fs.unlink(thumbTmp, () => {});
+          const imgExt = coverMime.includes('png') ? 'png' : coverMime.includes('webp') ? 'webp' : 'jpg';
+          const imgPath = `${baseName}.${imgExt}`;
+          imageUrl = await uploadToSupabase('images', imgPath, coverBuffer, coverMime);
         } catch (err) {
-          console.warn('[Bot] Ошибка загрузки обложки из Telegram:', err.message);
+          console.warn('[Bot] Cover upload failed:', err.message);
         }
       }
 
