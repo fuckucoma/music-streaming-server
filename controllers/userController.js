@@ -82,56 +82,42 @@ exports.edit_username = async (req, res) => {
 
 exports.register = async (req, res) => {
   const { username, password } = req.body;
-
+  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
   try {
-    const existingUser = await prisma.user.findUnique({ where: { username } });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Имя пользователя уже занято' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-
-    const newUser = await prisma.user.create({ data: { username, password: hashedPassword } });
-
-    // Создание JWT
-    const token = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-    res.status(201).json({ message: 'Пользователь зарегистрирован', userId: newUser.id, token });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Ошибка регистрации' });
+    const existing = await prisma.user.findUnique({ where: { username } });
+    if (existing) return res.status(400).json({ error: 'Username already taken' });
+ 
+    const hashed  = await bcrypt.hash(password, SALT_ROUNDS);
+    const newUser = await prisma.user.create({ data: { username, password: hashed } });
+    const token   = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    res.status(201).json({ message: 'Registered', userId: newUser.id, token });
+  } catch (err) {
+    console.error('register:', err);
+    res.status(500).json({ error: 'Registration failed' });
   }
 };
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
-
-  console.log(`Login attempt for username: ${username}`+'  '+ `user file: ${username}` );
-
+  console.log(`[Login] attempt: ${username}`);
   try {
     const user = await prisma.user.findUnique({ where: { username } });
-    if (!user) {
-      console.log(`User not found: ${username}`);
-      return res.status(401).json({ error: 'Неверные учетные данные' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      console.log(`Invalid password for user: ${username}`);
-      return res.status(401).json({ error: 'Неверные учетные данные' });
-    }
-
-  
-    const admin = user.isAdmin;
-   
-    
-    const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-    console.log(`User logged in successfully: ${username}`);
-    res.status(200).json({ message: 'Вход выполнен успешно', token , admin});
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Ошибка входа' });
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user.password) return res.status(401).json({ error: 'This account uses Telegram login' });
+ 
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+ 
+    const token = jwt.sign(
+      { userId: user.id, isAdmin: user.isAdmin },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN },
+    );
+    console.log(`[Login] success: ${username}`);
+    res.json({ message: 'Logged in', token, admin: user.isAdmin });
+  } catch (err) {
+    console.error('login:', err);
+    res.status(500).json({ error: 'Login failed' });
   }
 };
 
@@ -150,8 +136,11 @@ exports.logout = (req, res) => {
 };
 
 exports.uploadProfileImage = async (req, res) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token' });
+   const user = await prisma.user.findUnique({
+    where:{
+       id:req.user.userId
+    }
+ })
  
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -187,25 +176,15 @@ exports.uploadProfileImage = async (req, res) => {
 };
 
 exports.getAllUsers = async (req, res) => {
+  if (!req.user?.isAdmin) return res.status(403).json({ error: 'Forbidden' });
   try {
-
-    if (!req.user.isAdmin) {
-      return res.status(403).json({ error: 'Доступ запрещен' });
-    }
-
-      const users = await prisma.user.findMany({
-          select: {
-              id: true,
-              username: true,
-              profileImageUrl: true,
-              createdAt: true,
-              updatedAt: true
-          }
-      });
-      res.status(200).json({ users });
-  } catch (error) {
-      console.error("Ошибка при получении списка пользователей:", error);
-      res.status(500).json({ error: "Ошибка при получении списка пользователей" });
+    const users = await prisma.user.findMany({
+      select: { id: true, username: true, telegramName: true, profileImageUrl: true, createdAt: true },
+    });
+    res.json({ users });
+  } catch (err) {
+    console.error('getAllUsers:', err);
+    res.status(500).json({ error: 'Failed to get users' });
   }
 };
 
@@ -246,86 +225,60 @@ exports.deleteUser = async (req, res) => {
 };
 
 exports.getUserProfile = async (req, res) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'Токен не предоставлен' });
-  }
-
+   const user = await prisma.user.findUnique({
+    where:{
+       id:req.user.userId
+    }
+ })
+ 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.userId;
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const user    = await prisma.user.findUnique({
+      where:  { id: decoded.userId },
       select: {
         id: true,
         username: true,
+        telegramName: true,
+        telegramId: true,
         profileImageUrl: true,
+        isAdmin: true,
         createdAt: true,
-        updatedAt: true
-        //isAdmin:false
-      }
+        updatedAt: true,
+      },
     });
-
-    if (!user) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    res.status(500).json({ error: 'Ошибка получения профиля пользователя' });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+ 
+    // Return the best display name available
+    res.json({
+      ...user,
+      displayName: user.telegramName ?? user.username ?? `User#${user.id}`,
+    });
+  } catch (err) {
+    console.error('getUserProfile:', err);
+    res.status(500).json({ error: 'Failed to get profile' });
   }
 };
 
 exports.getUserById = async (req, res) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'Токен не предоставлен' });
-  }
+
+   const user = await prisma.user.findUnique({
+    where:{
+       id:req.user.userId
+    }
+ })
 
   try {
-    // Проверка валидности токена
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Получаем ID из параметров запроса и преобразуем в число
-    const userId = parseInt(req.params.id, 10);
-
-    // Проверяем, что ID является числом
-    if (isNaN(userId)) {
-      return res.status(400).json({ error: 'Неверный формат ID пользователя' });
-    }
-
-    // Ищем пользователя в базе данных
+    jwt.verify(token, JWT_SECRET); // just validate
+    const id   = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
     const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        profileImageUrl: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      where:  { id },
+      select: { id: true, username: true, telegramName: true, profileImageUrl: true, createdAt: true },
     });
-
-    if (!user) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    console.error('Ошибка при получении пользователя:', error);
-
-    // Обработка ошибок JWT
-    if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({ error: 'Неверный токен' });
-    }
-
-    // Обработка ошибок неверного формата ID
-    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2023') {
-      return res.status(400).json({ error: 'Неверный формат ID пользователя' });
-    }
-
-    res.status(500).json({ error: 'Ошибка сервера при получении пользователя' });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) return res.status(401).json({ error: 'Invalid token' });
+    res.status(500).json({ error: 'Server error' });
   }
 };

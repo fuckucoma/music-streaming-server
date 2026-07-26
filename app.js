@@ -14,15 +14,8 @@ const app = express();
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, curl)
     if (!origin) return callback(null, true);
-
-    const allowed = [
-      'https://underlab-phi.vercel.app',
-      'http://localhost:5173',
-    ];
-
-    // Allow the fixed domain OR any Vercel preview for your project
+    const allowed = ['https://underlab-phi.vercel.app', 'http://localhost:5173'];
     if (allowed.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
@@ -54,9 +47,9 @@ app.use((req, res, next) => {
 //}));
 
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
-app.use('/tracks', express.static(path.join(__dirname, 'public', 'tracks')));
 app.use('/avatars', express.static(path.join(__dirname, 'public','avatars')));
 
+app.use('/auth', require('./routes/authRoutes'));
 app.use('/users', require('./routes/userRoutes'));
 app.use('/tracks', require('./routes/trackRoutes'));
 app.use('/favorites', require('./routes/favoriteRoutes'));

@@ -27,13 +27,19 @@ model Track {
 
 model User {
   id              Int        @id @default(autoincrement())
-  username        String     @unique
+  username        String?    @unique   // optional — Telegram users may not set one
+  password        String?             // optional — Telegram users have no password
+     
+  telegramId      String     @unique  // Telegram user ID (string — avoids int overflow)
+  telegramUsername String?            // display name pulled from Telegram
+  telegramName String?
+  telegramPhotoUrl String?
+
+  isAdmin         Boolean    @default(false)
   profileImageUrl String?
-  password        String
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   favorites       Favorite[]
-  isAdmin         Boolean    @default(false)
   complaints      Complaint[]
   reviews         Review[]
 }
