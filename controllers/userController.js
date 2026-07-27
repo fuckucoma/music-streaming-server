@@ -225,37 +225,55 @@ exports.deleteUser = async (req, res) => {
 };
 
 exports.getUserProfile = async (req, res) => {
-   const user = await prisma.user.findUnique({
-    where:{
-       id:req.user.userId
-    }
- })
- 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user    = await prisma.user.findUnique({
-      where:  { id: decoded.userId },
+
+    console.log("AUTH USER:", req.user);
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.userId
+      },
       select: {
         id: true,
         username: true,
         telegramName: true,
         telegramId: true,
+        telegramPhotoUrl: true,
         profileImageUrl: true,
         isAdmin: true,
         createdAt: true,
         updatedAt: true,
       },
     });
-    if (!user) return res.status(404).json({ error: 'User not found' });
- 
-    // Return the best display name available
+
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found"
+      });
+    }
+
+
     res.json({
-      ...user,
-      displayName: user.telegramName ?? user.username ?? `User#${user.id}`,
+  ...user,
+  profileImageUrl:
+      user.profileImageUrl ??
+      user.telegramPhotoUrl ??
+      null,
+  displayName:
+      user.telegramName ??
+      user.username ??
+      `User#${user.id}`
+})
+
+
+  } catch(err) {
+
+    console.error("PROFILE ERROR:", err);
+
+    res.status(500).json({
+      error:"Failed to get profile"
     });
-  } catch (err) {
-    console.error('getUserProfile:', err);
-    res.status(500).json({ error: 'Failed to get profile' });
   }
 };
 
