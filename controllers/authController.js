@@ -73,22 +73,29 @@ exports.telegramAuth = async (req, res) => {
     let user = await prisma.user.findUnique({ where: { telegramId } });
 
     if (!user) {
-      user = await prisma.user.create({
-        data: {
-          telegramId,
-          telegramName,
-          telegramUsername: tgUser.username ?? null,
-          telegramPhotoUrl: tgUser.photo_url ?? null,
-        },
-      });
-      console.log(`[Auth] New user via Telegram: ${telegramName} (tgId=${telegramId})`);
-    } else if (user.telegramName !== telegramName) {
-      // Keep display name in sync if user changed their Telegram name
-      user = await prisma.user.update({
-        where: { telegramId },
-        data:  { telegramName },
-      });
-    }
+  user = await prisma.user.create({
+    data: {
+      telegramId,
+      telegramName,
+      telegramUsername: tgUser.username ?? null,
+      telegramPhotoUrl: tgUser.photo_url ?? null,
+    },
+  });
+
+} else {
+
+  user = await prisma.user.update({
+    where: {
+      telegramId
+    },
+    data: {
+      telegramName,
+      telegramUsername: tgUser.username ?? null,
+      telegramPhotoUrl: tgUser.photo_url ?? null,
+    },
+  });
+
+}
 
     const token = jwt.sign(
       { userId: user.id, isAdmin: user.isAdmin, telegramId },
@@ -101,10 +108,10 @@ exports.telegramAuth = async (req, res) => {
     return res.json({
       token,
       user: {
-        id:              user.id,
-        username:        user.telegramName ?? user.username,
+        id: user.id,
+        displayName: user.telegramName ?? user.username ?? `User${user.id}`,
         profileImageUrl: user.profileImageUrl ?? null,
-        telegramId:      user.telegramId,
+        telegramId: user.telegramId,
       },
     });
 
