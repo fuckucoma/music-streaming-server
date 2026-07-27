@@ -30,7 +30,7 @@ model User {
   username        String?    @unique   // optional — Telegram users may not set one
   password        String?             // optional — Telegram users have no password
      
-  telegramId      String     @unique  // Telegram user ID (string — avoids int overflow)
+  telegramId      String?     @unique  // Telegram user ID (string — avoids int overflow)
   telegramUsername String?            // display name pulled from Telegram
   telegramName String?
   telegramPhotoUrl String?
