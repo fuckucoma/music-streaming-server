@@ -1,34 +1,24 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
+const { deleteUserAccount } = require('../services/userAccounts');
+const { TrackError, updateTrack, deleteTrack } = require('../services/tracks');
 
 exports.getDashboardData = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
   try {
-    const usersCount = await prisma.user.count();
-    const tracksCount = await prisma.track.count();
-    const complaintsCount = await prisma.complaint.count();
-    const reviewsCount = await prisma.review.count();
-
-    res.status(200).json({
-      users: usersCount,
-      tracks: tracksCount,
-      complaints: complaintsCount,
-      reviews: reviewsCount,
-    });
+    const [users, tracks, complaints, reviews] = await Promise.all([
+      prisma.user.count(),
+      prisma.track.count(),
+      prisma.complaint.count(),
+      prisma.review.count(),
+    ]);
+    return res.json({ users, tracks, complaints, reviews });
   } catch (error) {
-    console.error('Ошибка получения данных панели администратора:', error);
-    res.status(500).json({ error: 'Ошибка получения данных панели администратора' });
+    console.error('Ошибка получения данных панели администратора:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка получения данных панели администратора' });
   }
 };
 
 exports.getAllUsers = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -40,132 +30,50 @@ exports.getAllUsers = async (req, res) => {
         isAdmin: true,
       },
     });
-    res.status(200).json(users);
+    return res.json(users);
   } catch (error) {
-    console.error('Ошибка получения пользователей:', error);
-    res.status(500).json({ error: 'Ошибка получения пользователей' });
+    console.error('Ошибка получения пользователей:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка получения пользователей' });
   }
 };
 
 exports.deleteUser = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
-  const { id } = req.params;
+  const id = positiveInt(req.params.id);
+  if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор пользователя' });
 
   try {
-    await prisma.user.delete({ where: { id: parseInt(id) } });
-    res.status(200).json({ message: 'Пользователь удален' });
+    if (!await deleteUserAccount(id)) return res.status(404).json({ error: 'Пользователь не найден' });
+    return res.json({ message: 'Пользователь удален' });
   } catch (error) {
-    console.error('Ошибка удаления пользователя:', error);
-    res.status(500).json({ error: 'Ошибка удаления пользователя' });
-  }
-};
-
-exports.getAllComplaints = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
-  try {
-    const complaints = await prisma.complaint.findMany({
-      include: { user: { select: { username: true } } },
-    });
-    res.status(200).json(complaints);
-  } catch (error) {
-    console.error('Ошибка получения жалоб:', error);
-    res.status(500).json({ error: 'Ошибка получения жалоб' });
-  }
-};
-
-exports.updateComplaint = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
-  const { id } = req.params;
-  const { status } = req.body;
-
-  try {
-    const complaint = await prisma.complaint.update({
-      where: { id: parseInt(id) },
-      data: { status },
-    });
-    res.status(200).json({ message: 'Жалоба обновлена', complaint });
-  } catch (error) {
-    console.error('Ошибка обновления жалобы:', error);
-    res.status(500).json({ error: 'Ошибка обновления жалобы' });
-  }
-};
-
-exports.getAllReviews = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
-  try {
-    const reviews = await prisma.review.findMany({
-      include: {
-        user: { select: { id: true, username: true , profileImageUrl: true} },
-        track: { select: { title: true } },
-      },
-    });
-    res.status(200).json(reviews);
-  } catch (error) {
-    console.error('Ошибка получения отзывов:', error);
-    res.status(500).json({ error: 'Ошибка получения отзывов' });
-  }
-};
-
-exports.deleteReview = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
-  const { id } = req.params;
-
-  try {
-    await prisma.review.delete({ where: { id: parseInt(id) } });
-    res.status(200).json({ message: 'Отзыв удален' });
-  } catch (error) {
-    console.error('Ошибка удаления отзыва:', error);
-    res.status(500).json({ error: 'Ошибка удаления отзыва' });
+    console.error('Ошибка удаления пользователя:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка удаления пользователя' });
   }
 };
 
 exports.editTrack = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
-  const { id } = req.params;
-  const { title, artist, album, genre } = req.body;
+  const id = positiveInt(req.params.id);
+  if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор трека' });
 
   try {
-    const track = await prisma.track.update({
-      where: { id: parseInt(id) },
-      data: { title, artist, album, genre },
-    });
-    res.status(200).json({ message: 'Трек обновлен', track });
+    const track = await updateTrack(id, req.body);
+    return res.json({ message: 'Трек обновлен', track });
   } catch (error) {
-    console.error('Ошибка обновления трека:', error);
-    res.status(500).json({ error: 'Ошибка обновления трека' });
+    if (error instanceof TrackError) return res.status(error.status).json({ error: error.message });
+    console.error('Ошибка обновления трека:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка обновления трека' });
   }
 };
 
 exports.deleteTrack = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
-  const { id } = req.params;
+  const id = positiveInt(req.params.id);
+  if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор трека' });
 
   try {
-    await prisma.track.delete({ where: { id: parseInt(id) } });
-    res.status(200).json({ message: 'Трек удален' });
+    await deleteTrack(id);
+    return res.json({ message: 'Трек удален' });
   } catch (error) {
-    console.error('Ошибка удаления трека:', error);
-    res.status(500).json({ error: 'Ошибка удаления трека' });
+    if (error instanceof TrackError) return res.status(error.status).json({ error: error.message });
+    console.error('Ошибка удаления трека:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка удаления трека' });
   }
 };

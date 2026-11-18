@@ -1,123 +1,48 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    console.log('Authorization Header:', authHeader);
-    
-    const token = authHeader?.split(' ')[1];
-    if (!token) {
-        console.log('Токен отсутствует');
-        return res.status(401).json({ error: 'Токен не предоставлен' });
-    }
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        console.log('Decoded Token:', decoded);
-        req.userId = decoded.userId;
-        next();
-    } catch (error) {
-        console.error('Ошибка проверки токена:', error.message);
-        return res.status(403).json({ error: 'Недействительный токен' });
-    }
-};
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
 
 exports.addFavorite = async (req, res) => {
-    const { trackId } = req.body;
+  const trackId = positiveInt(req.body?.trackId);
+  if (!trackId) return res.status(400).json({ error: 'Invalid track ID' });
 
-
-    console.log("Request User ID:", req.userId);
-    console.log("Request Track ID:", trackId);
-
-    try {
-        
-        const existingFavorite = await prisma.favorite.findUnique({
-            where: {
-                userId_trackId: {
-                    userId: req.userId,
-                    trackId: trackId,
-                }
-            }
-        });
-
-        if (existingFavorite) {
-            return res.status(400).json({ error: 'Трек уже добавлен в избранное' });
-        }
-
-        const favorite = await prisma.favorite.create({
-            data: { trackId, userId: req.userId }
-        });
-
-        res.status(201).json({ message: 'Трек добавлен в избранное', favorite });
-    } catch (error) {
-        console.error('Ошибка при добавлении в избранное:', error);
-        res.status(500).json({ error: 'Ошибка добавления в избранное' });
+  const userId = req.user.userId;
+  try {
+    const favorite = await prisma.favorite.create({ data: { trackId, userId } });
+    return res.status(201).json({ message: 'Трек добавлен в избранное', favorite });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      const favorite = await prisma.favorite.findUnique({ where: { userId_trackId: { userId, trackId } } });
+      return res.json({ message: 'Трек уже добавлен в избранное', favorite });
     }
+    if (error.code === 'P2003') return res.status(404).json({ error: 'Track or user not found' });
+    throw error;
+  }
 };
 
 exports.removeFavorite = async (req, res) => {
-    const { trackId } = req.body;
+  const trackId = positiveInt(req.body?.trackId);
+  if (!trackId) return res.status(400).json({ error: 'Invalid track ID' });
 
-    try {
-        const favorite = await prisma.favorite.deleteMany({
-            where: {
-                userId: req.userId,
-                trackId: trackId, // Убедитесь, что trackId передается правильно
-            },
-        });
-
-        console.log("User ID:", req.userId);
-        console.log("Track ID:", trackId);
-
-        if (favorite.count === 0) {
-            return res.status(404).json({ error: `Трек с ID ${trackId} не найден в избранном пользователя с ID ${req.userId}` });
-        }
-
-        res.status(200).json({ message: 'Трек удален из избранного' });
-    } catch (error) {
-        console.error('Ошибка при удалении из избранного:', error);
-        res.status(500).json({ error: 'Ошибка удаления из избранного' });
-    }
+  await prisma.favorite.deleteMany({ where: { userId: req.user.userId, trackId } });
+  return res.json({ message: 'Трек удален из избранного' });
 };
 
 exports.getFavorites = async (req, res) => {
-    try {
-        const favorites = await prisma.favorite.findMany({
-            where: { userId: req.userId },
-            include: {
-                track: true,
-            },
-            orderBy: {
-                favoriteId: 'desc', // Сортируем по `favoriteid` в порядке убывания
-            },
-        });
-  
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-  
-        const favoriteTracks = favorites.map(fav => ({
-            favoriteId: fav.favoriteId,
-            trackId: fav.trackId,
-            title: fav.track.title, 
-            artist: fav.track.artist,
-            imageUrl: fav.track.imageUrl || null,
-            filename: fav.track.filename,
-            createdAt: fav.track.createdAt,
-        }));
-  
-        res.status(200).json({ favorites: favoriteTracks });
-    } catch (error) {
-        console.error('Ошибка при получении избранного:', error);
-        res.status(500).json({ error: 'Ошибка получения избранного' });
-    }
-  };
-
-module.exports = { 
-  addFavorite: exports.addFavorite, 
-  getFavorites: exports.getFavorites, 
-  removeFavorite: exports.removeFavorite, 
-  authenticateToken 
+  const favorites = await prisma.favorite.findMany({
+    where: { userId: req.user.userId },
+    select: {
+      favoriteId: true,
+      trackId: true,
+      track: {
+        select: {
+          title: true, artist: true, album: true, genre: true, duration: true,
+          imageUrl: true, filename: true, createdAt: true,
+        },
+      },
+    },
+    orderBy: { favoriteId: 'desc' },
+  });
+  return res.json({
+    favorites: favorites.map(({ track, ...favorite }) => ({ ...favorite, ...track })),
+  });
 };

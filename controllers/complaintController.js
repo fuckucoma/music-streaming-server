@@ -1,63 +1,62 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
+
+const complaintStatuses = new Set(['pending', 'resolved', 'rejected']);
 
 exports.createComplaint = async (req, res) => {
-  const { message } = req.body;
-  const userId = req.user.userId;
-
-  if (!message) {
+  const { message } = req.body ?? {};
+  if (typeof message !== 'string' || !message.trim()) {
     return res.status(400).json({ error: 'Сообщение обязательно для заполнения' });
   }
 
   try {
     const complaint = await prisma.complaint.create({
-      data: { userId, message },
+      data: { userId: req.user.userId, message: message.trim() },
     });
-    console.log('Complaint created:', complaint);
-    res.status(201).json({ message: 'Жалоба успешно создана', complaint });
+    return res.status(201).json({ message: 'Жалоба успешно создана', complaint });
   } catch (error) {
-    console.error('Ошибка создания жалобы:', error);
-    res.status(500).json({ error: 'Ошибка создания жалобы' });
+    if (error.code === 'P2003') return res.status(404).json({ error: 'Пользователь не найден' });
+    console.error('Ошибка создания жалобы:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка создания жалобы' });
   }
 };
 
 exports.getAllComplaints = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
-
   try {
     const complaints = await prisma.complaint.findMany({
       include: { user: { select: { username: true } } },
       orderBy: { createdAt: 'desc' },
     });
-    res.status(200).json(complaints);
+    return res.json(complaints);
   } catch (error) {
-    console.error('Ошибка получения жалоб:', error);
-    res.status(500).json({ error: 'Ошибка получения жалоб' });
+    console.error('Ошибка получения жалоб:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка получения жалоб' });
   }
 };
 
-exports.updateComplaint = async (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Доступ запрещен' });
-  }
+function updateComplaint(formatResponse) {
+  return async (req, res) => {
+    const id = positiveInt(req.params.id);
+    const { status } = req.body ?? {};
+    if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор жалобы' });
+    if (!complaintStatuses.has(status)) return res.status(400).json({ error: 'Недопустимый статус жалобы' });
 
-  const { id } = req.params;
-  const { status } = req.body;
+    try {
+      const complaint = await prisma.complaint.update({ where: { id }, data: { status } });
+      return res.json(formatResponse(complaint));
+    } catch (error) {
+      if (error.code === 'P2025') return res.status(404).json({ error: 'Жалоба не найдена' });
+      console.error('Ошибка обновления жалобы:', error.code ?? error.name);
+      return res.status(500).json({ error: 'Ошибка обновления жалобы' });
+    }
+  };
+}
 
-  if (!['pending', 'resolved', 'rejected'].includes(status)) {
-    return res.status(400).json({ error: 'Недопустимый статус жалобы' });
-  }
-
-  try {
-    const updatedComplaint = await prisma.complaint.update({
-      where: { id: parseInt(id) },
-      data: { status },
-    });
-    res.status(200).json({ message: 'Статус жалобы обновлен', updatedComplaint });
-  } catch (error) {
-    console.error('Ошибка обновления жалобы:', error);
-    res.status(500).json({ error: 'Ошибка обновления жалобы' });
-  }
-};
+exports.updateComplaint = updateComplaint((updatedComplaint) => ({
+  message: 'Статус жалобы обновлен',
+  updatedComplaint,
+}));
+exports.updateAdminComplaint = updateComplaint((complaint) => ({
+  message: 'Жалоба обновлена',
+  complaint,
+}));

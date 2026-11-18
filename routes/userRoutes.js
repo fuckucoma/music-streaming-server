@@ -1,43 +1,28 @@
 const express = require('express');
-const router = express.Router();
-require('dotenv').config();
 const userController = require('../controllers/userController');
-const jwt = require('jsonwebtoken');
-
+const { positiveInt } = require('../lib/validation');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
+const { limitCredentialAttempts } = require('../middlewares/authRateLimit');
 const { uploadAvatar } = require('../middlewares/upload');
 
-const JWT_SECRET = process.env.JWT_SECRET; 
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
+const router = express.Router();
 
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; 
+function requireSelfOrAdmin(req, res, next) {
+  const id = positiveInt(req.params.id);
+  if (!id) return res.status(400).json({ error: 'Invalid ID' });
+  res.locals.targetUserId = id;
+  return id === req.user.userId ? next() : requireAdmin(req, res, next);
+}
 
-  if (!token) {
-    return res.sendStatus(401); 
-  }
+router.post('/register', limitCredentialAttempts, userController.register);
+router.post('/login', limitCredentialAttempts, userController.login);
+router.post('/logout', userController.logout);
+router.put('/edit-pass', authenticateToken, limitCredentialAttempts, userController.edit_pass);
+router.put('/edit-username', authenticateToken, userController.edit_username);
+router.post('/uploadProfileImage', authenticateToken, uploadAvatar.single('profileImage'), userController.uploadProfileImage);
+router.get('/profile', authenticateToken, userController.getUserProfile);
+router.get('/all', authenticateToken, requireAdmin, userController.getAllUsers);
+router.delete('/delete/:id', authenticateToken, requireAdmin, userController.deleteUser);
+router.get('/users/:id', authenticateToken, requireSelfOrAdmin, userController.getUserById);
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(403); 
-    }
-    req.user = user; 
-    next();
-  });
-};
-
-
-  router.put('/edit-pass', authenticateToken, userController.edit_pass);
-  router.put('/edit-username', authenticateToken, userController.edit_username);
-  router.post('/register', userController.register);
-  router.post('/login', userController.login);
-  router.post('/logout', userController.logout);
-  router.post('/uploadProfileImage', authenticateToken, uploadAvatar.single('profileImage'), userController.uploadProfileImage);
-  router.get('/profile', authenticateToken, userController.getUserProfile);
-  router.get('/all', authenticateToken, userController.getAllUsers);
-  router.delete('/delete/:id', authenticateToken, userController.deleteUser);
-  router.get('/users/:id',authenticateToken, userController.getUserById);
-
-  module.exports = router
-  
-  return router;
+module.exports = router;

@@ -1,237 +1,128 @@
-const { PrismaClient } = require('@prisma/client');
-const path   = require('path');
-const fs     = require('fs');
-const prisma = new PrismaClient();
-const mm     = require('music-metadata');
-const supabase = require('../lib/supabase');
-require('dotenv').config();
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const prisma = require('../lib/prisma');
+const {
+  IMAGE_LIMIT, TrackError, trackId, publicStorageKey, legacyName, coverUrl,
+  saveTracks, updateTrack, deleteTrack,
+} = require('../services/tracks');
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const tracksDirectory = path.join(__dirname, '..', 'public', 'tracks');
+const legacyAudioExtensions = new Set(['.mp3', '.mp2', '.flac', '.m4a', '.mp4', '.aac', '.ogg', '.oga', '.opus', '.wav', '.aiff']);
 
-
-async function uploadToSupabase(bucket, storagePath, fileBuffer, contentType) {
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(storagePath, fileBuffer, {
-      contentType,
-      upsert: true,
-    });
-  if (error) throw new Error(`Supabase upload failed: ${error.message}`);
-  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${storagePath}`;
+function serializeTrack(track) {
+  return { ...track, imageUrl: coverUrl(track.imageUrl) };
 }
 
-async function deleteFromSupabase(bucket, storagePath) {
-  if (!storagePath) return;
-  await supabase.storage.from(bucket).remove([storagePath]).catch(() => {});
-}
-
-function extractStoragePath(publicUrl, bucket) {
-  if (!publicUrl) return null;
-  const marker = `/object/public/${bucket}/`;
-  const idx = publicUrl.indexOf(marker);
-  return idx !== -1 ? publicUrl.slice(idx + marker.length) : null;
-}
-
-async function extractCoverBuffer(filePath) {
-  try {
-    const metadata = await mm.parseFile(filePath, { skipCovers: false });
-    const pic = metadata.common.picture?.[0];
-    if (!pic) return null;
-    return { buffer: pic.data, mime: pic.format?.includes('png') ? 'image/png' : 'image/jpeg' };
-  } catch {
-    return null;
-  }
-}
-
-async function extractMetadata(filePath, fallbackTitle) {
-  try {
-    const metadata = await mm.parseFile(filePath);
-    return {
-      title:    metadata.common.title   ?? fallbackTitle,
-      artist:   metadata.common.artist  ?? 'Unknown',
-      album:    metadata.common.album   ?? null,
-      genre:    metadata.common.genre?.[0] ?? null,
-      duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
-    };
-  } catch {
-    return { title: fallbackTitle, artist: 'Unknown', album: null, genre: null, duration: null };
-  }
+function sendError(res, error, message) {
+  if (error instanceof TrackError) return res.status(error.status).json({ error: error.message });
+  console.error(message, error.code || error.name);
+  return res.status(500).json({ error: message });
 }
 
 exports.addTrack = async (req, res) => {
   try {
-    const { title, artist } = req.body;
-    const imageFile = req.files?.['image']?.[0] ?? null;
-    const audioFile = req.files?.['track']?.[0] ?? null;
-
-    if (!imageFile || !audioFile) {
-      return res.status(400).json({ error: 'Both image and audio file are required' });
-    }
-
-    const baseName   = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-    const audioExt   = path.extname(audioFile.originalname) || '.mp3';
-    const imageExt   = path.extname(imageFile.originalname) || '.jpg';
-    const audioPath  = `${baseName}${audioExt}`;
-    const imagePath  = `${baseName}${imageExt}`;
-
-    const [audioUrl, imageUrl] = await Promise.all([
-      uploadToSupabase('tracks', audioPath, audioFile.buffer, audioFile.mimetype),
-      uploadToSupabase('images', imagePath, imageFile.buffer, imageFile.mimetype),
-    ]);
-
-    const track = await prisma.track.create({
-      data: { title, artist, filename: audioUrl, imageUrl },
-    });
-
-    res.status(201).json({ message: 'Track uploaded', track });
+    const cover = req.files?.image?.[0];
+    const audio = req.files?.track?.[0];
+    if (!cover || !audio) throw new TrackError(400, 'Both image and audio file are required');
+    if (cover.size > IMAGE_LIMIT) throw new TrackError(413, 'Image exceeds 5 MiB');
+    const image = await fs.readFile(cover.path);
+    const [track] = await saveTracks([{ audio, image, overrides: req.body }]);
+    res.status(201).json({ message: 'Track uploaded', track: serializeTrack(track) });
   } catch (error) {
-    console.error('addTrack error:', error);
-    res.status(500).json({ error: 'Failed to add track' });
+    sendError(res, error, 'Failed to add track');
   }
 };
 
 exports.getTracks = async (req, res) => {
   try {
     const tracks = await prisma.track.findMany();
-
     for (let i = tracks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [tracks[i], tracks[j]] = [tracks[j], tracks[i]];
     }
-
-    res.json(tracks);
+    res.json(tracks.map(serializeTrack));
   } catch (error) {
-    console.error('getTracks error:', error.message);
-    res.status(500).json({ error: 'Failed to get tracks' });
+    sendError(res, error, 'Failed to get tracks');
   }
 };
 
-exports.streamTrack = async (req, res) => {
+exports.streamTrack = async (req, res, next) => {
   try {
-    const track = await prisma.track.findUnique({
-      where: { id: parseInt(req.params.id) },
-    });
-    if (!track) return res.status(404).json({ error: 'Track not found' });
+    const id = trackId(req.params.id);
+    const track = await prisma.track.findUnique({ where: { id } });
+    if (!track) throw new TrackError(404, 'Track not found');
+    res.set('X-Content-Type-Options', 'nosniff');
+    if (publicStorageKey(track.filename, 'tracks')) {
+      return res.redirect(302, track.filename);
+    }
 
-    // filename is now a full Supabase public URL — redirect to it
-    // The browser/audio element will stream directly from Supabase CDN
-    return res.redirect(302, track.filename);
+    const name = legacyName(track.filename, 'tracks');
+    if (!name || !legacyAudioExtensions.has(path.extname(name).toLowerCase())) {
+      throw new TrackError(404, 'Audio file not found');
+    }
+    const file = await fs.lstat(path.join(tracksDirectory, name)).catch(error => {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    });
+    if (!file?.isFile()) throw new TrackError(404, 'Audio file not found');
+    return res.sendFile(name, { root: tracksDirectory, dotfiles: 'deny' }, error => {
+      if (!error) return;
+      if (res.headersSent) return next(error);
+      if (error.status === 416) {
+        res.set('Content-Range', `bytes */${file.size}`);
+        return res.status(416).end();
+      }
+      const status = error.status === 404 ? 404 : 500;
+      return res.status(status).json({ error: status === 404 ? 'Audio file not found' : 'Failed to stream track' });
+    });
   } catch (error) {
-    console.error('streamTrack error:', error);
-    res.status(500).json({ error: 'Failed to stream track' });
+    sendError(res, error, 'Failed to stream track');
   }
 };
 
 exports.search = async (req, res) => {
+  const query = typeof req.query.query === 'string' ? req.query.query.trim() : '';
+  if (!query) return res.status(400).json({ error: 'Query parameter required' });
+  if (query.length > 300) return res.status(400).json({ error: 'Query is too long' });
+  const searchTerm = query.replace(/[\\%_]/g, '\\$&');
   try {
-    const { query } = req.query;
-    if (!query) return res.status(400).json({ error: 'Query parameter required' });
-
     const tracks = await prisma.track.findMany({
       where: {
-        OR: [
-          { title:  { contains: query, mode: 'insensitive' } },
-          { artist: { contains: query, mode: 'insensitive' } },
-        ],
+        OR: ['title', 'artist', 'album'].map(field => ({
+          [field]: { contains: searchTerm, mode: 'insensitive' },
+        })),
       },
     });
-
-    res.json(tracks);
+    res.json(tracks.map(serializeTrack));
   } catch (error) {
-    console.error('search error:', error.message);
-    res.status(500).json({ error: 'Search failed' });
+    sendError(res, error, 'Search failed');
   }
 };
 
 exports.uploadMultipleTracks = async (req, res) => {
   try {
-    const files = req.files;
-    if (!files?.length) return res.status(400).json({ error: 'No files provided' });
-
-    const uploaded = [];
-
-    for (const file of files) {
-      const baseName  = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-      const ext       = path.extname(file.originalname).toLowerCase() || '.mp3';
-      const audioPath = `${baseName}${ext}`;
-
-      // Write temp file for metadata extraction
-      const tmpPath = `/tmp/${baseName}${ext}`;
-      fs.writeFileSync(tmpPath, file.buffer);
-
-      let meta     = { title: path.parse(file.originalname).name, artist: 'Unknown', album: null, genre: null, duration: null };
-      let imageUrl = null;
-
-      try {
-        meta = await extractMetadata(tmpPath, meta.title);
-        const cover = await extractCoverBuffer(tmpPath);
-        if (cover) {
-          const imgExt  = cover.mime === 'image/png' ? 'png' : 'jpg';
-          const imgPath = `${baseName}.${imgExt}`;
-          imageUrl = await uploadToSupabase('images', imgPath, cover.buffer, cover.mime);
-        }
-      } catch (err) {
-        console.warn(`Metadata extraction failed for ${file.originalname}:`, err.message);
-      } finally {
-        fs.unlink(tmpPath, () => {});
-      }
-
-      const audioUrl = await uploadToSupabase('tracks', audioPath, file.buffer, file.mimetype);
-
-      const track = await prisma.track.create({
-        data: {
-          title:    meta.title,
-          artist:   meta.artist,
-          album:    meta.album,
-          genre:    meta.genre,
-          duration: meta.duration,
-          filename: audioUrl,
-          imageUrl: imageUrl,
-        },
-      });
-
-      uploaded.push(track);
-    }
-
-    res.status(201).json({ message: 'Tracks uploaded', tracks: uploaded });
+    if (!req.files?.length) throw new TrackError(400, 'No files provided');
+    const tracks = await saveTracks(req.files.map(audio => ({ audio })));
+    res.status(201).json({ message: 'Tracks uploaded', tracks: tracks.map(serializeTrack) });
   } catch (error) {
-    console.error('uploadMultipleTracks error:', error);
-    res.status(500).json({ error: 'Bulk upload failed' });
+    sendError(res, error, 'Bulk upload failed');
   }
 };
 
 exports.editTrack = async (req, res) => {
-  if (!req.user?.isAdmin) return res.status(403).json({ error: 'Forbidden' });
-
-  const { title, artist, album, genre } = req.body;
   try {
-    const updated = await prisma.track.update({
-      where: { id: parseInt(req.params.id) },
-      data: { title, artist, album, genre },
-    });
-    res.status(200).json({ message: 'Track updated', track: updated });
+    const track = await updateTrack(req.params.id, req.body || {});
+    res.status(200).json({ message: 'Track updated', track: serializeTrack(track) });
   } catch (error) {
-    console.error('editTrack error:', error);
-    res.status(500).json({ error: 'Failed to update track' });
+    sendError(res, error, 'Failed to update track');
   }
 };
 
 exports.deleteTrack = async (req, res) => {
   try {
-    const track = await prisma.track.findUnique({ where: { id: parseInt(req.params.id) } });
-    if (!track) return res.status(404).json({ error: 'Track not found' });
-
-    await prisma.track.delete({ where: { id: track.id } });
-
-    // Delete files from Supabase Storage
-    await Promise.all([
-      deleteFromSupabase('tracks', extractStoragePath(track.filename, 'tracks')),
-      deleteFromSupabase('images', extractStoragePath(track.imageUrl, 'images')),
-    ]);
-
+    await deleteTrack(req.params.id);
     res.status(200).json({ message: 'Track deleted' });
   } catch (error) {
-    console.error('deleteTrack error:', error.message);
-    res.status(500).json({ error: 'Failed to delete track' });
+    sendError(res, error, 'Failed to delete track');
   }
 };

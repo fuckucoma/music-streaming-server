@@ -1,209 +1,94 @@
-const TelegramBot = require('node-telegram-bot-api');
-const { PrismaClient } = require('@prisma/client');
-const https    = require('https');
-const fs       = require('fs');
-const path     = require('path');
-const mm       = require('music-metadata');
-const supabase = require('../lib/supabase');
-require('dotenv').config();
+const { Bot } = require('node-telegram-bot-api');
+const prisma = require('../lib/prisma');
+const { IMAGE_LIMIT, TrackError, saveTracks } = require('../services/tracks');
 
-const prisma    = new PrismaClient();
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const TELEGRAM_AUDIO_LIMIT = 20 * 1024 * 1024;
 
-if (!BOT_TOKEN) {
-  console.warn('⚠️  TELEGRAM_BOT_TOKEN not set — bot disabled');
-  module.exports = { launch: () => {} };
-  return;
-}
-
-// ── Download file to /tmp ─────────────────────────────────────
-function downloadToTmp(url, dest) {
-  return new Promise((resolve, reject) => {
-    https.get(url, res => {
-      // Ensure we actually got a successful response
-      if (res.statusCode !== 200) {
-        return reject(new Error(`Download failed: HTTP ${res.statusCode}`));
-      }
-      
-      const file = fs.createWriteStream(dest);
-      res.pipe(file);
-      
-      file.on('finish', () => {
-        file.close(resolve); 
-      });
-      
-      // Catch network stream interruptions
-      res.on('error', err => {
-        fs.unlink(dest, () => {}); 
-        reject(err);
-      });
-      
-    }).on('error', err => { 
-      fs.unlink(dest, () => {}); 
-      reject(err); 
-    });
-  });
-}
-
-// ── Upload buffer to Supabase Storage ────────────────────────
-async function uploadToSupabase(bucket, storagePath, buffer, contentType) {
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(storagePath, buffer, { contentType, upsert: true });
-  if (error) throw new Error(error.message);
-  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${storagePath}`;
-}
-
-// ── Extract metadata from tmp file ───────────────────────────
-async function extractMeta(filePath, tgAudio, fallbackName) {
-  // 1. Establish a strong baseline using Telegram's built-in metadata
-  let meta = {
-    title:    tgAudio?.title ?? fallbackName,
-    artist:   tgAudio?.performer ?? 'Unknown',
-    album:    null,
-    genre:    null,
-    duration: tgAudio?.duration ?? null,
-    cover:    null
-  };
-
-  try {
-    const m = await mm.parseFile(filePath);
-    
-    // 2. Only overwrite the baseline if mm successfully found the tags
-    if (m.common.title) meta.title = m.common.title;
-    if (m.common.artist) meta.artist = m.common.artist;
-    if (m.common.album) meta.album = m.common.album;
-    if (m.common.genre?.length) meta.genre = m.common.genre[0];
-    if (m.format.duration) meta.duration = Math.round(m.format.duration);
-    if (m.common.picture?.length) meta.cover = m.common.picture[0];
-    
-  } catch (err) {
-    // Log the error instead of failing silently!
-    console.warn(`[Bot] Metadata warning for ${fallbackName}: ${err.message}`);
-    // If it crashes (e.g., missing EOF marker), we safely return the Telegram baseline 
-    // instead of wiping everything to 'Unknown'.
+async function downloadFile(api, token, file, limit) {
+  if (file.file_size > limit) throw new TrackError(413, 'This file exceeds the Telegram download limit.');
+  const info = await api.getFile({ file_id: file.file_id });
+  if (info.file_size > limit) throw new TrackError(413, 'This file exceeds the Telegram download limit.');
+  const parts = info.file_path?.split('/');
+  if (!parts?.length || parts.some(part => !part || part === '.' || part === '..')) {
+    throw new Error('Telegram did not return a valid file path');
   }
-
-  return meta;
+  const filePath = parts.map(encodeURIComponent).join('/');
+  const response = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`, {
+    redirect: 'error',
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!response.ok || !response.body || Number(response.headers.get('content-length')) > limit) {
+    await response.body?.cancel();
+    throw new TrackError(400, 'Telegram could not provide a downloadable file within the limit.');
+  }
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of response.body) {
+    size += chunk.byteLength;
+    if (size > limit) throw new TrackError(413, 'This file exceeds the Telegram download limit.');
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks, size);
 }
 
 function launch() {
-  const bot = new TelegramBot(BOT_TOKEN, { polling: true });
-  console.log('🤖 Telegram bot started');
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    console.log('Telegram bot disabled');
+    return;
+  }
+  const uploaders = new Set((process.env.TELEGRAM_UPLOAD_USER_IDS || '').split(',')
+    .map(value => value.trim()).filter(value => /^\d+$/.test(value)));
+  const bot = new Bot(token);
+  let busy = false;
 
-  bot.onText(/\/start/, msg => {
-    bot.sendMessage(msg.chat.id,
-      `👋 Hi ${msg.from?.first_name ?? 'there'}!\n\nSend me any audio file to add it to the music library.\n\nSupported: MP3, FLAC, AAC, OGG, WAV, M4A`
-    );
-  });
+  bot.command('start', ctx => ctx.reply(
+    'Send an audio file in this private chat to add it to the music library. Upload access is required.\n\nMP3, FLAC, AAC, OGG, WAV, M4A',
+  ));
 
-  bot.on('message', async msg => {
-    const chatId = msg.chat.id;
-    const audio  = msg.audio ?? msg.document ?? null;
-    if (!audio) return;
-
-    if (msg.document) {
-      const mime = msg.document.mime_type ?? '';
-      if (!mime.startsWith('audio/')) {
-        bot.sendMessage(chatId, '❌ Please send an audio file.');
+  bot.on('message', async ctx => {
+    const message = ctx.message;
+    const media = message?.audio || message?.document;
+    if (!media || !ctx.from?.id || ctx.chat?.type !== 'private') return;
+    const telegramId = String(ctx.from.id);
+    if (!uploaders.has(telegramId)) {
+      const user = await prisma.user.findUnique({ where: { telegramId }, select: { isAdmin: true } });
+      if (!user?.isAdmin) {
+        await ctx.reply('This account cannot add tracks to the library.');
         return;
       }
     }
-
-    const statusMsg = await bot.sendMessage(chatId, '⏳ Downloading…');
-
-    try {
-      const fileInfo  = await bot.getFile(audio.file_id);
-      const fileUrl   = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileInfo.file_path}`;
-      const origName  = msg.audio?.file_name ?? msg.document?.file_name ?? `track_${Date.now()}.mp3`;
-      const ext       = path.extname(origName).toLowerCase() || '.mp3';
-      const baseName  = `tg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-      const tmpPath   = `/tmp/${baseName}${ext}`;
-
-      // Download to /tmp
-      await bot.editMessageText('⏳ Saving…', { chat_id: chatId, message_id: statusMsg.message_id });
-      await downloadToTmp(fileUrl, tmpPath);
-
-      // Extract metadata
-      await bot.editMessageText('⏳ Reading metadata…', { chat_id: chatId, message_id: statusMsg.message_id });
-      const meta = await extractMeta(tmpPath, msg.audio, path.parse(origName).name);
-
-      // Upload audio to Supabase
-      const audioBuffer  = fs.readFileSync(tmpPath);
-      const audioStoragePath = `${baseName}${ext}`;
-      const audioUrl     = await uploadToSupabase('tracks', audioStoragePath, audioBuffer, `audio/${ext.slice(1)}`);
-
-      // Upload cover if present
-      let imageUrl = null;
-      if (meta.cover && meta.cover.data) {
-        try {
-          const imgExt  = meta.cover.format?.includes('png') ? 'png' : 'jpg';
-          const imgPath = `${baseName}.${imgExt}`;
-          imageUrl = await uploadToSupabase('images', imgPath, meta.cover.data, meta.cover.format || `image/${imgExt}`);
-        } catch (err) {
-          console.warn('[Bot] Ошибка загрузки ID3 обложки:', err.message);
-        }
-      }
-
-      const tgThumb = msg.audio?.thumbnail || msg.audio?.thumb; 
-      if (!imageUrl && tgThumb) {
-        try {
-          // Получаем путь к превьюшке на серверах Telegram
-          const thumbInfo = await bot.getFile(tgThumb.file_id);
-          const thumbUrl  = `https://api.telegram.org/file/bot${BOT_TOKEN}/${thumbInfo.file_path}`;
-          const thumbTmp  = `/tmp/thumb_${baseName}.jpg`;
-
-          // Скачиваем превьюшку во временную папку
-          await downloadToTmp(thumbUrl, thumbTmp);
-          const thumbBuffer = fs.readFileSync(thumbTmp);
-
-          // Загружаем в Supabase
-          imageUrl = await uploadToSupabase('images', `thumb_${baseName}.jpg`, thumbBuffer, 'image/jpeg');
-
-          // Подчищаем временный файл
-          fs.unlink(thumbTmp, () => {});
-        } catch (err) {
-          console.warn('[Bot] Ошибка загрузки обложки из Telegram:', err.message);
-        }
-      }
-
-      // Cleanup tmp
-      fs.unlink(tmpPath, () => {});
-
-      // Save to DB
-      const track = await prisma.track.create({
-        data: {
-          title:    meta.title,
-          artist:   meta.artist,
-          album:    meta.album,
-          genre:    meta.genre,
-          duration: meta.duration,
-          filename: audioUrl,
-          imageUrl: imageUrl,
-        },
-      });
-
-      await bot.editMessageText(
-        `✅ *Track added!*\n\n🎵 ${track.title}\n👤 ${track.artist}` +
-        (track.album ? `\n💿 ${track.album}` : '') +
-        (track.genre ? `\n🏷 ${track.genre}` : '') +
-        (imageUrl    ? `\n🖼 Cover saved` : '') +
-        `\n\n_ID: ${track.id}_`,
-        { chat_id: chatId, message_id: statusMsg.message_id, parse_mode: 'Markdown' }
-      );
-
-      console.log(`[Bot] Added: "${track.title}" by ${track.artist}`);
-
-    } catch (err) {
-      console.error('[Bot] Error:', err.message);
-      await bot.editMessageText(`❌ Failed: ${err.message}`, {
-        chat_id: chatId, message_id: statusMsg.message_id,
-      }).catch(() => {});
+    if (busy) {
+      await ctx.reply('Another track is being uploaded. Try again shortly.');
+      return;
     }
+
+    busy = true;
+    let result;
+    try {
+      const buffer = await downloadFile(ctx.api, token, media, TELEGRAM_AUDIO_LIMIT);
+      const thumbnail = media.thumbnail || media.thumb;
+      const [track] = await saveTracks([{
+        audio: { buffer, size: buffer.length, originalname: media.file_name || '' },
+        fallback: { title: media.title, artist: media.performer, duration: media.duration },
+        loadFallbackCover: thumbnail ? () => downloadFile(ctx.api, token, thumbnail, IMAGE_LIMIT).catch(() => null) : undefined,
+      }]);
+      const details = [track.title, track.artist, track.album, track.genre].filter(Boolean).join('\n');
+      result = `Track added\n\n${details}\n\nID: ${track.id}`;
+    } catch (error) {
+      console.error('Telegram track upload failed:', error.code || error.name);
+      result = error instanceof TrackError ? error.message : 'Could not save the track. Try again later.';
+    } finally {
+      busy = false;
+    }
+    await ctx.reply(result);
   });
 
-  bot.on('polling_error', err => console.error('[Bot] Polling error:', err.message));
+  bot.catch(error => console.error('Telegram update failed:', error.name));
+  void bot.init().then(() => {
+    console.log('Telegram bot started');
+    return bot.startPolling(undefined, { allowedUpdates: ['message'] });
+  }).catch(error => console.error('Telegram polling failed:', error.name));
   return bot;
 }
 

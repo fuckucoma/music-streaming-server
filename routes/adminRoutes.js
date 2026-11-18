@@ -1,51 +1,20 @@
 const express = require('express');
+const admin = require('../controllers/adminController');
+const complaints = require('../controllers/complaintController');
+const reviews = require('../controllers/reviewController');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
+
 const router = express.Router();
-const adminController = require('../controllers/adminController.js');
-const jwt = require('jsonwebtoken');
+router.use(authenticateToken, requireAdmin);
 
-const JWT_SECRET = process.env.JWT_SECRET; 
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
-
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; 
-
-  if (!token) {
-    return res.sendStatus(401); 
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(403); 
-    }
-    req.user = user; 
-    next();
-  });
-};
-
-// Получить сводку данных для панели администратора
-router.get('/dashboard', authenticateToken, adminController.getDashboardData);
-
-// Получить список пользователей
-router.get('/users', authenticateToken, adminController.getAllUsers);
-
-// Удалить пользователя
-router.delete('/users/:id', authenticateToken, adminController.deleteUser);
-
-// Получить список жалоб
-router.get('/complaints', authenticateToken, adminController.getAllComplaints);
-
-// Обновить статус жалобы
-router.put('/complaints/:id', authenticateToken, adminController.updateComplaint);
-
-// Получить список отзывов
-router.get('/reviews', authenticateToken, adminController.getAllReviews);
-
-// Удалить отзыв
-router.delete('/reviews/:id', authenticateToken, adminController.deleteReview);
-
-// Управление треками
-router.put('/tracks/:id', authenticateToken, adminController.editTrack);
-router.delete('/tracks/:id', authenticateToken, adminController.deleteTrack);
+router.get('/dashboard', admin.getDashboardData);
+router.get('/users', admin.getAllUsers);
+router.delete('/users/:id', admin.deleteUser);
+router.get('/complaints', complaints.getAllComplaints);
+router.put('/complaints/:id', complaints.updateAdminComplaint);
+router.get('/reviews', reviews.getAdminReviews);
+router.delete('/reviews/:id', reviews.deleteReview);
+router.put('/tracks/:id', admin.editTrack);
+router.delete('/tracks/:id', admin.deleteTrack);
 
 module.exports = router;
