@@ -66,7 +66,7 @@ exports.streamTrack = async (req, res, next) => {
     });
     if (!file?.isFile()) throw new TrackError(404, 'Audio file not found');
     return res.sendFile(name, { root: tracksDirectory, dotfiles: 'deny' }, error => {
-      if (!error) return;
+      if (!error || res.destroyed || error.code === 'ECONNABORTED') return;
       if (res.headersSent) return next(error);
       if (error.status === 416) {
         res.set('Content-Range', `bytes */${file.size}`);

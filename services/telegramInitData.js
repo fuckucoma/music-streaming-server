@@ -5,7 +5,7 @@ const CLOCK_SKEW_SECONDS = 60;
 const MAX_INIT_DATA_LENGTH = 16_384;
 
 // https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
-function readTelegramUser(initData, botToken, now = Math.floor(Date.now() / 1000)) {
+function readTelegramUser(initData, botToken, now = Math.floor(Date.now() / 1000), maxAgeSeconds = MAX_AGE_SECONDS) {
   if (typeof initData !== 'string' || initData.length === 0 || initData.length > MAX_INIT_DATA_LENGTH) {
     return null;
   }
@@ -20,7 +20,7 @@ function readTelegramUser(initData, botToken, now = Math.floor(Date.now() / 1000
   const authDate = fields.get('auth_date');
   if (!hash || !/^[a-f0-9]{64}$/i.test(hash) || !authDate || !/^\d+$/.test(authDate)) return null;
   const timestamp = Number(authDate);
-  if (!Number.isSafeInteger(timestamp) || timestamp <= 0 || now - timestamp > MAX_AGE_SECONDS ||
+  if (!Number.isSafeInteger(timestamp) || timestamp <= 0 || now - timestamp > maxAgeSeconds ||
       timestamp - now > CLOCK_SKEW_SECONDS) return null;
 
   fields.delete('hash');

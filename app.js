@@ -35,6 +35,7 @@ function createApp({ logRequests = true } = {}) {
   app.use('/auth', require('./routes/authRoutes'));
   app.use('/users', require('./routes/userRoutes'));
   app.use('/tracks', require('./routes/trackRoutes'));
+  app.use('/playback', require('./routes/playbackRoutes'));
   app.use('/favorites', require('./routes/favoriteRoutes'));
   app.use('/complaints', require('./routes/complaintRoutes'));
   app.use('/reviews', require('./routes/reviewRoutes'));

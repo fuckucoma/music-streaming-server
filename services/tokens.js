@@ -2,7 +2,10 @@ const jwt = require('jsonwebtoken');
 
 function issueToken(user) {
   const claims = { userId: user.id, isAdmin: user.isAdmin };
-  if (user.telegramId) claims.telegramId = user.telegramId;
+  if (user.telegramId) {
+    claims.telegramId = user.telegramId;
+    claims.telegramAuthVersion = user.telegramAuthVersion ?? 0;
+  }
   return jwt.sign(claims, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
 }
 
@@ -12,7 +15,10 @@ function verifyToken(token) {
       !Number.isFinite(claims.exp)) {
     throw new Error('Invalid token claims');
   }
-  return claims.userId;
+  if (claims.telegramId !== undefined && (typeof claims.telegramId !== 'string' || !/^\d+$/.test(claims.telegramId))) {
+    throw new Error('Invalid Telegram token claims');
+  }
+  return claims;
 }
 
 module.exports = { issueToken, verifyToken };

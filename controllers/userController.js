@@ -93,9 +93,13 @@ exports.edit_pass = async (req, res, next) => {
     }
 
     const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
-    const { count } = await prisma.user.updateMany({
-      where: { id: userId, password: user.password },
-      data: { password: hashed },
+    const { count } = await prisma.$transaction(async (tx) => {
+      const result = await tx.user.updateMany({
+        where: { id: userId, password: user.password },
+        data: { password: hashed },
+      });
+      if (result.count) await tx.telegramLinkCode.deleteMany({ where: { userId } });
+      return result;
     });
     if (!count) return res.status(409).json({ error: 'Пароль изменился. Повторите попытку.' });
     return res.json({ message: 'Пароль успешно изменен' });
@@ -139,13 +143,15 @@ exports.uploadProfileImage = async (req, res, next) => {
 
 exports.getUserProfile = async (req, res, next) => {
   try {
-    const user = await prisma.user.findUnique({
+    const account = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { ...publicUserFields, telegramId: true, telegramPhotoUrl: true, isAdmin: true, updatedAt: true },
+      select: { ...publicUserFields, telegramId: true, telegramPhotoUrl: true, isAdmin: true, updatedAt: true, password: true },
     });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!account) return res.status(404).json({ error: 'User not found' });
+    const { password, ...user } = account;
     return res.set('Cache-Control', 'no-store').json({
       ...user,
+      hasPassword: Boolean(user.username && password),
       profileImageUrl: user.profileImageUrl ?? user.telegramPhotoUrl ?? null,
       displayName: user.telegramName ?? user.username ?? `User#${user.id}`,
     });

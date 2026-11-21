@@ -5,13 +5,35 @@ function unauthorized(res) {
   return res.set('WWW-Authenticate', 'Bearer').status(401).json({ error: 'Authentication required' });
 }
 
-function authenticateToken(req, res, next) {
-  const match = /^Bearer\s+(\S+)$/i.exec(req.headers.authorization ?? '');
-  if (!match) return unauthorized(res);
+async function readAuthenticatedUser(authorizationHeader) {
+  const match = /^Bearer\s+(\S+)$/i.exec(authorizationHeader ?? '');
+  if (!match) return null;
+  let claims;
   try {
-    req.user = { userId: verifyToken(match[1]) };
+    claims = verifyToken(match[1]);
   } catch {
-    return unauthorized(res);
+    return null;
+  }
+  if (claims.telegramId) {
+    const current = await prisma.user.findUnique({
+      where: { id: claims.userId },
+      select: { telegramId: true, telegramAuthVersion: true },
+    });
+    if (!current || current.telegramId !== claims.telegramId ||
+        (current.telegramAuthVersion ?? 0) !== (claims.telegramAuthVersion ?? 0)) {
+      return null;
+    }
+  }
+  return { userId: claims.userId };
+}
+
+async function authenticateToken(req, res, next) {
+  try {
+    const user = await readAuthenticatedUser(req.headers.authorization);
+    if (!user) return unauthorized(res);
+    req.user = user;
+  } catch (error) {
+    return next(error);
   }
   next();
 }
@@ -32,4 +54,4 @@ async function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { authenticateToken, requireAdmin };
+module.exports = { authenticateToken, readAuthenticatedUser, requireAdmin };

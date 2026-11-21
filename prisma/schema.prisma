@@ -34,6 +34,8 @@ model User {
   telegramUsername String?            // display name pulled from Telegram
   telegramName String?
   telegramPhotoUrl String?
+  telegramAuthVersion Int @default(0)
+  telegramLinkCode TelegramLinkCode?
 
   isAdmin         Boolean    @default(false)
   profileImageUrl String?
@@ -42,6 +44,50 @@ model User {
   favorites       Favorite[]
   complaints      Complaint[]
   reviews         Review[]
+  playbackSession PlaybackSession?
+  playbackDevices PlaybackDevice[]
+}
+
+model TelegramLinkCode {
+  userId    Int      @id
+  codeHash  String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model PlaybackSession {
+  userId          Int       @id
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  version         Int       @default(0)
+  activeDeviceId  String?   @db.Uuid
+  pendingDeviceId String?   @db.Uuid
+  leaseUntil      DateTime?
+  handoffResume   Boolean   @default(false)
+  trackId         Int?
+  duration        Int?
+  queue           Int[]     @default([])
+  queueIndex      Int       @default(-1)
+  shuffleOrder    Int[]     @default([])
+  playing         Boolean   @default(false)
+  position        Float     @default(0)
+  positionAt      DateTime  @default(now())
+  shuffle         Boolean   @default(false)
+  repeat          String    @default("none")
+}
+
+model PlaybackDevice {
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @db.Uuid
+  keyHash    String   @db.Char(64)
+  name       String
+  platform   String
+  lastSeenAt DateTime @default(now())
+
+  @@id([userId, id])
+  @@index([userId, lastSeenAt])
 }
 
 model Favorite {

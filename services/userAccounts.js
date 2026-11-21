@@ -6,15 +6,16 @@ function imageBucket() {
   return supabase.storage.from('images');
 }
 
-function ownedAvatarPath(bucket, userId, avatarUrl) {
+function managedAvatar(bucket, avatarUrl) {
   if (!avatarUrl) return null;
   try {
     const root = new URL(bucket.getPublicUrl('avatars/').data.publicUrl);
     const url = new URL(avatarUrl);
     if (url.origin !== root.origin || !url.pathname.startsWith(root.pathname)) return null;
     const filename = url.pathname.slice(root.pathname.length);
-    const owned = new RegExp(`^${userId}_(?:\\d+|[a-f0-9-]{36})\\.(?:jpg|png|webp|gif)$`);
-    return owned.test(filename) ? `avatars/${filename}` : null;
+    const match = /^([1-9]\d*)_(?:\d+|[a-f0-9-]{36})\.(?:jpg|png|webp|gif)$/.exec(filename);
+    const owner = Number(match?.[1]);
+    return Number.isInteger(owner) && owner <= 2147483647 ? { owner, path: `avatars/${filename}` } : null;
   } catch {
     return null;
   }
@@ -30,6 +31,27 @@ async function removeImage(bucket, path) {
   }
 }
 
+async function cleanupUserAvatar(id, profileImageUrl) {
+  if (!profileImageUrl) return;
+  const bucket = imageBucket();
+  const avatar = managedAvatar(bucket, profileImageUrl);
+  if (!avatar) return;
+  if (avatar.owner !== id) {
+    // Merged profiles may retain an avatar from a deleted Telegram-only account.
+    try {
+      const existing = await prisma.user.findFirst({
+        where: { OR: [{ id: avatar.owner }, { profileImageUrl }] },
+        select: { id: true },
+      });
+      if (existing) return;
+    } catch {
+      console.warn('Transferred avatar ownership could not be confirmed');
+      return;
+    }
+  }
+  await removeImage(bucket, avatar.path);
+}
+
 async function deleteUserAccount(id) {
   let user;
   try {
@@ -43,10 +65,7 @@ async function deleteUserAccount(id) {
     if (error.code === 'P2025') return false;
     throw error;
   }
-  if (user.profileImageUrl) {
-    const bucket = imageBucket();
-    await removeImage(bucket, ownedAvatarPath(bucket, id, user.profileImageUrl));
-  }
+  await cleanupUserAvatar(id, user.profileImageUrl);
   return true;
 }
 
@@ -85,8 +104,8 @@ async function updateUserAvatar(id, buffer, { extension, contentType }) {
     return { status: 'conflict' };
   }
 
-  await removeImage(bucket, ownedAvatarPath(bucket, id, current.profileImageUrl));
+  await cleanupUserAvatar(id, current.profileImageUrl);
   return { status: 'saved', profileImageUrl };
 }
 
-module.exports = { deleteUserAccount, updateUserAvatar };
+module.exports = { cleanupUserAvatar, deleteUserAccount, updateUserAvatar };
