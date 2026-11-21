@@ -22,9 +22,10 @@ test('deleting a track updates shared queues and stops a deleted current track',
     });
     ids = tracks.map(track => track.id);
     const [first, middle, last] = ids;
+    const timelineRevision = randomUUID();
     await prisma.playbackSession.create({
       data: {
-        userId, trackId: first, queue: ids, queueIndex: 0, playing: true,
+        userId, trackId: first, queue: ids, queueIndex: 0, playing: true, timelineRevision,
         shuffle: true, shuffleOrder: [2, 0, 1],
       },
     });
@@ -37,6 +38,7 @@ test('deleting a track updates shared queues and stops a deleted current track',
     assert.equal(afterRemoval.trackId, first);
     assert.equal(afterRemoval.playing, true);
     assert.equal(afterRemoval.version, 1);
+    assert.equal(afterRemoval.timelineRevision, timelineRevision);
 
     await deleteTrack(first);
     const afterStop = await prisma.playbackSession.findUniqueOrThrow({ where: { userId } });
@@ -47,6 +49,7 @@ test('deleting a track updates shared queues and stops a deleted current track',
     assert.equal(afterStop.playing, false);
     assert.equal(afterStop.position, 0);
     assert.equal(afterStop.version, 2);
+    assert.notEqual(afterStop.timelineRevision, timelineRevision);
   } finally {
     try {
       if (userId) await prisma.user.delete({ where: { id: userId } });

@@ -98,6 +98,7 @@ test('linked devices share a queue, receive remote controls and hand off one out
   assert.deepEqual(initial.devices, []);
   assert.equal(initial.session.trackId, null);
   assert.equal(initial.session.version, 0);
+  assert.equal(initial.session.timelineRevision, null);
   await api('/playback/devices', { token: browser, body: desktop });
   const home = await api('/playback/devices', { token: telegram, body: phone });
   assert.equal(home.devices.length, 2);
@@ -123,8 +124,10 @@ test('linked devices share a queue, receive remote controls and hand off one out
   });
   assert.ok(start.session.leaseUntil - start.serverTime > 25_000);
   assert.ok(start.session.leaseUntil - start.serverTime <= 30_000);
+  assert.ok(start.session.timelineRevision);
   const streamed = await read((snapshot) => snapshot.session.version === start.session.version);
   assert.equal(streamed.session.activeDeviceId, desktop.deviceId);
+  assert.equal(streamed.session.timelineRevision, start.session.timelineRevision);
   assert.deepEqual(streamed.session.queue, [first, second]);
   assert.ok(streamed.session.position >= 12);
   const corrected = await api('/playback/heartbeat', {
@@ -132,23 +135,47 @@ test('linked devices share a queue, receive remote controls and hand off one out
     body: { ...desktop, report: { trackId: first, version: start.session.version, position: 15 } },
   });
   assert.equal(corrected.session.version, start.session.version);
+  assert.equal(corrected.session.timelineRevision, start.session.timelineRevision);
   assert.ok(corrected.session.position >= 15);
 
   const pause = await command(telegram, phone, start.session.version, { type: 'pause' });
   assert.equal((await api('/playback/session', { token: browser })).session.playing, false);
   assert.equal(pause.session.activeDeviceId, desktop.deviceId);
   assert.equal(pause.session.leaseUntil, corrected.session.leaseUntil);
+  assert.equal(pause.session.timelineRevision, start.session.timelineRevision);
   const resume = await command(telegram, phone, pause.session.version, { type: 'play' });
   assert.equal(resume.session.activeDeviceId, desktop.deviceId);
   assert.equal(resume.session.leaseUntil, corrected.session.leaseUntil);
-  const seek = await command(telegram, phone, resume.session.version, { type: 'seek', position: 35 });
+  assert.equal(resume.session.timelineRevision, start.session.timelineRevision);
+  const shuffled = await command(telegram, phone, resume.session.version, { type: 'setShuffle', shuffle: true });
+  const repeated = await command(telegram, phone, shuffled.session.version, { type: 'setRepeat', repeat: 'one' });
+  assert.equal(shuffled.session.timelineRevision, start.session.timelineRevision);
+  assert.equal(repeated.session.timelineRevision, start.session.timelineRevision);
+  const seekId = randomUUID();
+  const seek = await command(telegram, phone, repeated.session.version, { type: 'seek', position: 35, seekId });
   assert.equal(seek.session.activeDeviceId, desktop.deviceId);
   assert.equal(seek.session.leaseUntil, corrected.session.leaseUntil);
+  assert.equal(seek.session.timelineRevision, seekId);
   assert.ok(seek.session.position >= 35);
-  const next = await command(telegram, phone, seek.session.version, { type: 'next' });
+  assert.equal((await read(snapshot => snapshot.session.version === seek.session.version)).session.timelineRevision, seekId);
+  const staleReport = await api('/playback/heartbeat', {
+    token: browser,
+    body: { ...desktop, report: { trackId: first, version: repeated.session.version, position: 60 } },
+  });
+  assert.equal(staleReport.session.timelineRevision, seekId);
+  assert.equal(staleReport.session.positionAt, seek.session.positionAt);
+  const legacySeek = await command(telegram, phone, seek.session.version, { type: 'seek', position: 42 });
+  assert.ok(legacySeek.session.timelineRevision);
+  assert.notEqual(legacySeek.session.timelineRevision, seekId);
+  const restarted = await command(telegram, phone, legacySeek.session.version, { type: 'previous' });
+  assert.equal(restarted.session.trackId, first);
+  assert.ok(restarted.session.position < 3);
+  assert.notEqual(restarted.session.timelineRevision, seekId);
+  const next = await command(telegram, phone, restarted.session.version, { type: 'next' });
   assert.equal(next.session.trackId, second);
   assert.equal(next.session.activeDeviceId, desktop.deviceId);
-  assert.equal(next.session.leaseUntil, corrected.session.leaseUntil);
+  assert.equal(next.session.leaseUntil, staleReport.session.leaseUntil);
+  assert.notEqual(next.session.timelineRevision, seekId);
   const handoff = await command(telegram, phone, next.session.version, {
     type: 'transfer', targetDeviceId: phone.deviceId,
   });
@@ -174,6 +201,7 @@ test('linked devices share a queue, receive remote controls and hand off one out
   assert.equal(switched.session.activeDeviceId, phone.deviceId);
   assert.equal(switched.session.pendingDeviceId, null);
   assert.equal(switched.session.playing, true);
+  assert.notEqual(switched.session.timelineRevision, next.session.timelineRevision);
   assert.ok(switched.session.position >= 16);
   await command(browser, desktop, resume.session.version, { type: 'pause' }, 409);
 

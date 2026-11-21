@@ -53,6 +53,10 @@ test('commands and heartbeat reports reject invalid media and versions', () => {
   assert.deepEqual(validatePlaybackCommand({ type: 'play', trackId: 12, queue: [12, 12, 13] }).queue, [12, 13]);
   assert.throws(() => validatePlaybackCommand({ type: 'play', trackId: 12, queue: [13] }), PlaybackError);
   assert.throws(() => validatePlaybackCommand({ type: 'seek', position: -1 }), PlaybackError);
+  assert.throws(() => validatePlaybackCommand({ type: 'seek', position: 12, seekId: 'invalid' }), PlaybackError);
+  const seekId = '7cbadac1-fdcb-4167-a3f9-9a568fe254ba';
+  assert.deepEqual(validatePlaybackCommand({ type: 'seek', position: 12, seekId: seekId.toUpperCase() }),
+    { type: 'seek', position: 12, seekId });
   assert.throws(() => validatePositionReport({ version: 3, trackId: 12, position: Infinity }), PlaybackError);
   assert.throws(() => validatePositionReport({ version: -1, trackId: 12, position: 1 }), PlaybackError);
   assert.deepEqual(validatePositionReport({ version: 3, trackId: 12, position: 2 }), { version: 3, trackId: 12, position: 2 });

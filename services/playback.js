@@ -1,4 +1,4 @@
-const { createHash, timingSafeEqual } = require('node:crypto');
+const { createHash, randomUUID, timingSafeEqual } = require('node:crypto');
 const { EventEmitter } = require('node:events');
 const { Prisma } = require('@prisma/client');
 const prisma = require('../lib/prisma');
@@ -171,7 +171,7 @@ async function removeDevice(userId, targetDeviceId) {
       const data = { version: { increment: 1 } };
       if (wasActive) Object.assign(data, {
         activeDeviceId: null, leaseUntil: null, position: projectedPosition(session, now),
-        positionAt: now, playing: false,
+        positionAt: now, playing: false, timelineRevision: randomUUID(),
       });
       if (wasPending) Object.assign(data, { pendingDeviceId: null, handoffResume: false });
       await tx.playbackSession.update({ where: { userId }, data });
@@ -239,6 +239,7 @@ function claim(session, now, deviceId) {
 
 function finishHandoff(session, now, position) {
   return {
+    timelineRevision: randomUUID(),
     activeDeviceId: session.pendingDeviceId,
     pendingDeviceId: null,
     leaseUntil: leaseDeadline(now),
@@ -311,6 +312,8 @@ async function playChanges(db, session, now, deviceId, command) {
   const unchangedQueue = queue.length === session.queue.length && queue.every((id, i) => id === session.queue[i]);
   const position = command.position ?? (sameTrack ? projectedPosition(session, now) : 0);
   const playingFrom = duration !== null && position >= duration ? 0 : position;
+  const movesTimeline = !sameTrack || !hasLiveLease(session, now) ||
+    command.position !== undefined || playingFrom !== position;
   return {
     ...claim(session, now, deviceId),
     trackId,
@@ -323,6 +326,7 @@ async function playChanges(db, session, now, deviceId, command) {
     playing: true,
     position: boundedPosition(playingFrom, duration),
     positionAt: now,
+    ...(movesTimeline && { timelineRevision: randomUUID() }),
   };
 }
 
@@ -337,9 +341,11 @@ async function navigationChanges(db, session, now, deviceId, command) {
     throw new PlaybackError(409, 'Track already changed');
   }
   if (!session.trackId || (fromEnded && !session.playing)) return null;
-  if (fromEnded && session.repeat === 'one') return { playing: true, position: 0, positionAt: now };
+  if (fromEnded && session.repeat === 'one') {
+    return { playing: true, position: 0, positionAt: now, timelineRevision: randomUUID() };
+  }
   if (command.type === 'previous' && position > 3) {
-    return { playing: live && session.playing, position: 0, positionAt: now };
+    return { playing: live && session.playing, position: 0, positionAt: now, timelineRevision: randomUUID() };
   }
 
   const candidates = navigationCandidates(session, command.type, fromEnded);
@@ -351,7 +357,7 @@ async function navigationChanges(db, session, now, deviceId, command) {
   const trackId = session.queue[index];
   return {
     ...claim(session, now, deviceId), trackId, duration: tracks.get(trackId).duration,
-    queueIndex: index, playing: true, position: 0, positionAt: now,
+    queueIndex: index, playing: true, position: 0, positionAt: now, timelineRevision: randomUUID(),
   };
 }
 
@@ -400,7 +406,13 @@ async function commandChanges(db, userId, session, now, deviceId, command) {
     }
     case 'seek':
       if (!session.trackId) throw new PlaybackError(409, 'Select a track first');
-      return { playing: live && session.playing, position: boundedPosition(command.position, session.duration), positionAt: now };
+      return {
+        playing: live && session.playing,
+        position: boundedPosition(command.position, session.duration),
+        positionAt: now,
+        // Both SSE and HTTP identify a seek that the originating device already applied.
+        timelineRevision: command.seekId && command.seekId !== session.timelineRevision ? command.seekId : randomUUID(),
+      };
     case 'next':
     case 'previous':
     case 'ended':

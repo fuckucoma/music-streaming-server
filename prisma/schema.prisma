@@ -83,6 +83,7 @@ model PlaybackSession {
   userId          Int       @id
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   version         Int       @default(0)
+  timelineRevision String?  @db.Uuid
   activeDeviceId  String?   @db.Uuid
   pendingDeviceId String?   @db.Uuid
   leaseUntil      DateTime?

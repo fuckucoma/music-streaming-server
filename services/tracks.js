@@ -229,7 +229,7 @@ async function deleteTrack(value) {
             version: { increment: 1 },
             ...(currentRemoved && {
               trackId: null, duration: null, playing: false, handoffResume: false,
-              position: 0, positionAt: new Date(),
+              position: 0, positionAt: new Date(), timelineRevision: randomUUID(),
             }),
           },
         });

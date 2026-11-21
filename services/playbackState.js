@@ -14,7 +14,7 @@ class PlaybackError extends Error {
 }
 
 const emptySession = {
-  version: 0, activeDeviceId: null, pendingDeviceId: null, leaseUntil: null,
+  version: 0, timelineRevision: null, activeDeviceId: null, pendingDeviceId: null, leaseUntil: null,
   handoffResume: false, trackId: null, duration: null, queue: [], queueIndex: -1,
   shuffleOrder: [], playing: false, position: 0, positionAt: new Date(0), shuffle: false,
   repeat: 'none',
@@ -42,6 +42,7 @@ function projectedPosition(session, now) {
 function presentSession(session, now) {
   return {
     version: session.version,
+    timelineRevision: session.timelineRevision,
     activeDeviceId: session.activeDeviceId,
     pendingDeviceId: session.pendingDeviceId,
     leaseUntil: session.leaseUntil?.getTime() ?? null,
@@ -103,7 +104,8 @@ function validatePlaybackCommand(command) {
     case 'seek': {
       const position = optionalPosition(command.position);
       if (position === undefined) throw new PlaybackError(400, 'Playback position required');
-      return { type, position };
+      const seekId = command.seekId === undefined ? undefined : validateUuid(command.seekId, 'Invalid seek ID');
+      return { type, position, seekId };
     }
     case 'next':
     case 'previous':
@@ -123,11 +125,15 @@ function validatePlaybackCommand(command) {
   }
 }
 
-function validateDeviceId(value) {
+function validateUuid(value, message) {
   if (typeof value !== 'string' || !/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(value)) {
-    throw new PlaybackError(400, 'Invalid device ID');
+    throw new PlaybackError(400, message);
   }
   return value.toLowerCase();
+}
+
+function validateDeviceId(value) {
+  return validateUuid(value, 'Invalid device ID');
 }
 
 function shuffledOrder(queue, first) {
