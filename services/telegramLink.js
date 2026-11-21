@@ -78,7 +78,10 @@ async function linkAccounts(db, codeHash, telegramId, now) {
   const target = link.user;
   if (!target.username || !target.password || target.telegramId) throw expiredLink();
   const duplicate = await db.user.findUnique({ where: { telegramId }, select: linkableFields });
-  if (duplicate && (duplicate.isAdmin || duplicate.password || target.isAdmin)) {
+  if (duplicate && duplicate.id === target.id) {
+    throw new TelegramLinkError(409, 'Telegram is already linked to this account');
+  }
+  if (duplicate && (duplicate.isAdmin || target.isAdmin)) {
     throw new TelegramLinkError(409, 'This Telegram account cannot be merged');
   }
   return { target, duplicate };
@@ -100,6 +103,8 @@ async function moveAccountData(tx, from, to) {
   }
   await tx.review.updateMany({ where: { userId: from }, data: { userId: to } });
   await tx.complaint.updateMany({ where: { userId: from }, data: { userId: to } });
+  await tx.playbackDevice.deleteMany({ where: { userId: from } });
+  await tx.playbackSession.deleteMany({ where: { userId: from } });
 }
 
 async function confirmTelegramLink(code, identity, confirmMerge) {

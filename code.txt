@@ -1,0 +1,3827 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+bot/
+  bot.js
+controllers/
+  adminController.js
+  authController.js
+  complaintController.js
+  favoriteController.js
+  reviewController.js
+  trackController.js
+  userController.js
+lib/
+  prisma.js
+  supabase.js
+  validation.js
+middlewares/
+  auth.js
+  authRateLimit.js
+  upload.js
+prisma/
+  migrations/
+    20260527205512_init/
+      migration.sql
+    20260726191952_add_telegram_auth/
+      migration.sql
+    20261118132000_catalog_access_and_fk_indexes/
+      migration.sql
+    20261118164500_telegram_account_link/
+      migration.sql
+    20261118164600_shared_playback/
+      migration.sql
+    migration_lock.toml
+  dev.db
+  schema.prisma
+public/
+  avatars/
+    1731505277650-854801523.jpg
+    1731505336694-758057800.jpg
+    1731581540647-606487092.jpg
+    1731687042836-612403886.jpg
+    1740381757084-737555330.jpg
+    1740381871041-772088476.jpg
+    1740394662542-934691887.jpg
+    1740556268412-209559653.jpg
+  images/
+    1730913543112-365001987.jpg
+    1731345145188-713051912.jpg
+    1731346085505-414538167.jpg
+    1731488910714-342816690.jpg
+    1731489092013-113041125.jpg
+    1731581510788-146956340.jpg
+    1731582413571-225642255.jpg
+    1731584207016-901205970.jpg
+    1731686717607-674483640.jpg
+    1731884779477-139220314.jpg
+    1731938477711-203206062.jpg
+    1740387194045-18157668.jpg
+    1740388537320-254440553.jpg
+    1740388560485-641026365.jpg
+    1740388616323-453658902.jpg
+    1740388628660-858293319.jpg
+    1740388643138-551224647.jpg
+    1740388652246-354280035.jpg
+    1740388669567-99229513.jpg
+    1740388684199-481107325.jpg
+    1740388853053-580111223.jpg
+    1740388867029-568441377.jpg
+    1740389198486-407888499.jpg
+    1740389204624-461784623.jpg
+    1740389329332-261301143.jpg
+    1740390046824-167495132.jpg
+    1740390068653-13529512.jpg
+    1740390080303-647682737.jpg
+    1740390091271-527863604.jpg
+    1740390103714-768856003.jpg
+    1740390113616-47473304.jpg
+    1740390124017-790392645.jpg
+    1740390134493-889183884.jpg
+    1740390144465-103664995.jpg
+    1740390165089-237908266.jpg
+    1740390176835-799209661.jpg
+    1740390192894-879607926.jpg
+    1740390202670-839637286.jpg
+    1740390235195-858972243.jpg
+    1740391007972-405234631.jpg
+    1740391017661-401431337.jpg
+    1740391026638-425300656.jpg
+    1740391036500-250715620.jpg
+    1740391046383-428866198.jpg
+    1740391056417-773412859.jpg
+    1740391067921-961627784.jpg
+    1740391077383-205147922.jpg
+    1740391090361-168384531.jpg
+    1740391102617-835994049.jpg
+    1740391294124-106476467.jpg
+    1740391686505-221383026.jpg
+    1740397763758-641860465.jpg
+    1740397776191-976407402.jpg
+    1740397787803-29993344.jpg
+    1740397798209-287406730.jpg
+    1740398329762-94340130.jpg
+    1740398349452-545333485.jpg
+    1740398374859-760804409.jpg
+    1740556388249-974509409.jpg
+    cats_10.jpg
+  tracks/
+    1730913543144-730169079.mp3
+    1730914807180-723131945.mp3
+    1730918549806-792624394.mp3
+    1731345145202-277167398.mp3
+    1731346087240-660021812.mp3
+    1731488910717-630657828.mp3
+    1731489092072-794249674.mp3
+    1731581511674-310013427.mp3
+    1731582413584-611197620.mp3
+    1731584207018-353569998.mp3
+    1731686717706-328492181.mp3
+    1731884779485-633256983.mp3
+    1731938478312-270142207.mp3
+    1740387194055-648215366.mp3
+    1740388537353-317071701.mp3
+    1740388560497-768669193.mp3
+    1740388616333-866184835.mp3
+    1740388628686-477972004.mp3
+    1740388643148-659398813.mp3
+    1740388652273-182045152.mp3
+    1740388669585-152211123.mp3
+    1740388684221-997299888.mp3
+    1740388853085-291450273.mp3
+    1740388867040-194653245.mp3
+    1740389201722-10386360.mp3
+    1740389208582-932679913.mp3
+    1740389329345-608598591.mp3
+    1740390046835-6531966.mp3
+    1740390068663-35172487.mp3
+    1740390080328-397592707.mp3
+    1740390091279-247048540.mp3
+    1740390103745-124307160.mp3
+    1740390113632-24200748.mp3
+    1740390124029-450019693.mp3
+    1740390134508-709623457.mp3
+    1740390144496-950469416.mp3
+    1740390165100-488571842.mp3
+    1740390176846-479192350.mp3
+    1740390192910-859540965.mp3
+    1740390202705-489473291.mp3
+    1740390236934-986651927.mp3
+    1740391007998-69906199.mp3
+    1740391017671-636821523.mp3
+    1740391026663-651250945.mp3
+    1740391036514-316246165.mp3
+    1740391046431-410246996.mp3
+    1740391056450-347484771.mp3
+    1740391067931-580155229.mp3
+    1740391077414-233700175.mp3
+    1740391090374-693947783.mp3
+    1740391102634-916860550.mp3
+    1740391294170-329900087.mp3
+    1740391686561-408643510.mp3
+    1740397763760-888995964.mp3
+    1740397776201-523404120.mp3
+    1740397787829-235537033.mp3
+    1740397798224-783121076.mp3
+    1740398329868-524439592.mp3
+    1740398349558-323157175.mp3
+    1740398374942-815686848.mp3
+    1740556388259-886664123.mp3
+    alpare - work.mp3
+    overfly - keysio.mp3
+    yello - owl.mp3
+routes/
+  adminRoutes.js
+  authRoutes.js
+  complaintRoutes.js
+  favoriteRoutes.js
+  playbackRoutes.js
+  reviewRoutes.js
+  trackRoutes.js
+  userRoutes.js
+services/
+  images.js
+  playback.js
+  playbackState.js
+  telegramIdentity.js
+  telegramInitData.js
+  telegramLink.js
+  tokens.js
+  tracks.js
+  userAccounts.js
+test/
+  api.test.js
+  playbackState.test.js
+  sharedPlayback.integration.test.js
+  telegramLink.integration.test.js
+.env.example
+.gitignore
+app.js
+change.sql
+package.json
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="lib/prisma.js">
+const { PrismaClient } = require('@prisma/client');
+
+module.exports = new PrismaClient();
+</file>
+
+<file path="lib/supabase.js">
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY,
+);
+
+module.exports = supabase;
+</file>
+
+<file path="lib/validation.js">
+function positiveInt(value) {
+  if (typeof value === 'string' && /^\d+$/.test(value)) value = Number(value);
+  return Number.isInteger(value) && value > 0 && value <= 2_147_483_647 ? value : null;
+}
+
+module.exports = { positiveInt };
+</file>
+
+<file path="middlewares/authRateLimit.js">
+const WINDOW_MS = 10 * 60 * 1000;
+const MAX_IP_KEYS = 10_000;
+const MAX_ACCOUNT_KEYS = 20_000;
+const byIp = new Map();
+const byAccount = new Map();
+let resetAt = Date.now() + WINDOW_MS;
+
+function allowAttempt(attempts, key, limit, maxKeys) {
+  const count = attempts.get(key) ?? 0;
+  if (count >= limit || (!count && attempts.size >= maxKeys)) return false;
+  attempts.set(key, count + 1);
+  return true;
+}
+
+function limitCredentialAttempts(req, res, next) {
+  const now = Date.now();
+  if (now >= resetAt) {
+    byIp.clear();
+    byAccount.clear();
+    resetAt = now + WINDOW_MS;
+  }
+
+  const address = req.ip ?? req.socket.remoteAddress ?? 'unknown';
+  const username = req.body?.username;
+  let accountKey;
+  if (req.user) accountKey = `${address}\0id:${req.user.userId}`;
+  else if (typeof username === 'string' && username.length <= 1024) {
+    accountKey = `${address}\0name:${username.trim().toLowerCase()}`;
+  }
+  if (!allowAttempt(byIp, address, 240, MAX_IP_KEYS) ||
+      (accountKey && !allowAttempt(byAccount, accountKey, 15, MAX_ACCOUNT_KEYS))) {
+    res.set('Retry-After', String(Math.ceil((resetAt - now) / 1000)));
+    return res.status(429).json({ error: 'Too many requests. Try again later.' });
+  }
+  next();
+}
+
+module.exports = { limitCredentialAttempts };
+</file>
+
+<file path="prisma/migrations/20260527205512_init/migration.sql">
+-- CreateTable
+CREATE TABLE "Track" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "artist" TEXT NOT NULL,
+    "filename" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "album" TEXT,
+    "imageUrl" TEXT,
+    "duration" INTEGER,
+    "genre" TEXT,
+    "rating" DOUBLE PRECISION,
+
+    CONSTRAINT "Track_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
+    "username" TEXT NOT NULL,
+    "profileImageUrl" TEXT,
+    "password" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Favorite" (
+    "favoriteId" SERIAL NOT NULL,
+    "trackId" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Favorite_pkey" PRIMARY KEY ("favoriteId")
+);
+
+-- CreateTable
+CREATE TABLE "Complaint" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "message" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'ожидание',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Complaint_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Review" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "trackId" INTEGER NOT NULL,
+    "content" TEXT NOT NULL,
+    "rating" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Review_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Favorite_userId_trackId_key" ON "Favorite"("userId", "trackId");
+
+-- AddForeignKey
+ALTER TABLE "Favorite" ADD CONSTRAINT "Favorite_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Favorite" ADD CONSTRAINT "Favorite_trackId_fkey" FOREIGN KEY ("trackId") REFERENCES "Track"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Complaint" ADD CONSTRAINT "Complaint_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Review" ADD CONSTRAINT "Review_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Review" ADD CONSTRAINT "Review_trackId_fkey" FOREIGN KEY ("trackId") REFERENCES "Track"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+</file>
+
+<file path="prisma/migrations/20260726191952_add_telegram_auth/migration.sql">
+/*
+  Warnings:
+
+  - A unique constraint covering the columns `[telegramId]` on the table `User` will be added. If there are existing duplicate values, this will fail.
+
+*/
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "telegramId" TEXT,
+ADD COLUMN     "telegramName" TEXT,
+ADD COLUMN     "telegramPhotoUrl" TEXT,
+ADD COLUMN     "telegramUsername" TEXT,
+ALTER COLUMN "username" DROP NOT NULL,
+ALTER COLUMN "password" DROP NOT NULL;
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_telegramId_key" ON "User"("telegramId");
+</file>
+
+<file path="prisma/migrations/20261118132000_catalog_access_and_fk_indexes/migration.sql">
+BEGIN;
+
+CREATE INDEX "Favorite_trackId_idx" ON "Favorite"("trackId");
+CREATE INDEX "Review_trackId_idx" ON "Review"("trackId");
+CREATE INDEX "Review_userId_idx" ON "Review"("userId");
+CREATE INDEX "Complaint_userId_idx" ON "Complaint"("userId");
+
+ALTER TABLE "Track" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Favorite" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Review" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Complaint" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public."_prisma_migrations" ENABLE ROW LEVEL SECURITY;
+
+DO $$
+DECLARE
+    api_role text;
+BEGIN
+    -- The Express catalog already publishes these track records; other data stays behind its API.
+    FOR api_role IN SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated') LOOP
+        EXECUTE format('GRANT SELECT ON TABLE public."Track" TO %I', api_role);
+        EXECUTE format(
+            'CREATE POLICY %I ON public."Track" FOR SELECT TO %I USING (true)',
+            'catalog_read_' || api_role, api_role
+        );
+        EXECUTE format(
+            'REVOKE ALL ON TABLE public."User", public."Favorite", public."Review", public."Complaint" FROM %I',
+            api_role
+        );
+        IF to_regclass('public."_prisma_migrations"') IS NOT NULL THEN
+            EXECUTE format('REVOKE ALL ON TABLE public."_prisma_migrations" FROM %I', api_role);
+        END IF;
+        EXECUTE format(
+            'REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLE public."Track" FROM %I',
+            api_role
+        );
+    END LOOP;
+
+    IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime')
+        AND NOT EXISTS (
+            SELECT 1 FROM pg_publication_tables
+            WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'Track'
+        ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public."Track";
+    END IF;
+END $$;
+
+COMMIT;
+</file>
+
+<file path="prisma/migrations/20261118164500_telegram_account_link/migration.sql">
+BEGIN;
+
+ALTER TABLE public."User" ADD COLUMN "telegramAuthVersion" INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE public."TelegramLinkCode" (
+    "userId" INTEGER NOT NULL,
+    "codeHash" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "TelegramLinkCode_pkey" PRIMARY KEY ("userId"),
+    CONSTRAINT "TelegramLinkCode_userId_fkey" FOREIGN KEY ("userId")
+        REFERENCES public."User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE UNIQUE INDEX "TelegramLinkCode_codeHash_key" ON public."TelegramLinkCode"("codeHash");
+CREATE INDEX "TelegramLinkCode_expiresAt_idx" ON public."TelegramLinkCode"("expiresAt");
+
+ALTER TABLE public."TelegramLinkCode" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public."TelegramLinkCode" FROM PUBLIC;
+DO $$
+DECLARE
+    api_role text;
+BEGIN
+    FOR api_role IN SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated') LOOP
+        EXECUTE format('REVOKE ALL ON public."TelegramLinkCode" FROM %I', api_role);
+    END LOOP;
+END $$;
+
+COMMIT;
+</file>
+
+<file path="prisma/migrations/20261118164600_shared_playback/migration.sql">
+BEGIN;
+
+CREATE TABLE public."PlaybackSession" (
+    "userId" INTEGER NOT NULL,
+    "version" INTEGER NOT NULL DEFAULT 0,
+    "activeDeviceId" UUID,
+    "pendingDeviceId" UUID,
+    "leaseUntil" TIMESTAMP(3),
+    "handoffResume" BOOLEAN NOT NULL DEFAULT false,
+    "trackId" INTEGER,
+    "duration" INTEGER,
+    "queue" INTEGER[] DEFAULT ARRAY[]::INTEGER[],
+    "queueIndex" INTEGER NOT NULL DEFAULT -1,
+    "shuffleOrder" INTEGER[] DEFAULT ARRAY[]::INTEGER[],
+    "playing" BOOLEAN NOT NULL DEFAULT false,
+    "position" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "positionAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "shuffle" BOOLEAN NOT NULL DEFAULT false,
+    "repeat" TEXT NOT NULL DEFAULT 'none',
+    CONSTRAINT "PlaybackSession_pkey" PRIMARY KEY ("userId"),
+    CONSTRAINT "PlaybackSession_userId_fkey" FOREIGN KEY ("userId")
+        REFERENCES public."User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE public."PlaybackDevice" (
+    "userId" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "keyHash" CHAR(64) NOT NULL,
+    "name" TEXT NOT NULL,
+    "platform" TEXT NOT NULL,
+    "lastSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PlaybackDevice_pkey" PRIMARY KEY ("userId", "id"),
+    CONSTRAINT "PlaybackDevice_userId_fkey" FOREIGN KEY ("userId")
+        REFERENCES public."User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX "PlaybackDevice_userId_lastSeenAt_idx" ON public."PlaybackDevice"("userId", "lastSeenAt");
+
+ALTER TABLE public."PlaybackSession" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."PlaybackDevice" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public."PlaybackSession", public."PlaybackDevice" FROM PUBLIC;
+DO $$
+DECLARE
+    api_role text;
+BEGIN
+    FOR api_role IN SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated') LOOP
+        EXECUTE format('REVOKE ALL ON public."PlaybackSession", public."PlaybackDevice" FROM %I', api_role);
+    END LOOP;
+END $$;
+
+COMMIT;
+</file>
+
+<file path="routes/playbackRoutes.js">
+const express = require('express');
+const { authenticateToken, readAuthenticatedUser } = require('../middlewares/auth');
+const {
+  getSnapshot, registerDevice, heartbeat, acknowledge, applyCommand, subscribe, PlaybackError,
+} = require('../services/playback');
+
+const router = express.Router();
+const owners = new Map();
+const MAX_STREAMS = 64;
+const MAX_OWNER_STREAMS = 8;
+const REFRESH_INTERVAL = 2_500;
+const KEEPALIVE_INTERVAL = 12_000;
+const STREAM_DURATION = 60_000;
+let openStreams = 0;
+
+router.use(authenticateToken, (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+function playbackEndpoint(handler) {
+  return async (req, res, next) => {
+    const { userId } = req.user;
+    try {
+      const snapshot = await handler(userId, req.body);
+      res.json(snapshot);
+    } catch (error) {
+      if (!(error instanceof PlaybackError)) return next(error);
+      if (error.status !== 409) return res.status(error.status).json({ error: error.message });
+      try {
+        const snapshot = await getSnapshot(userId);
+        return res.status(409).json({ error: error.message, snapshot });
+      } catch (readError) {
+        return next(readError);
+      }
+    }
+  };
+}
+
+function eventVersion(snapshot) {
+  const { session, devices } = snapshot;
+  return JSON.stringify([
+    session.version, session.leaseUntil, session.playing, session.positionAt,
+    devices.map(device => [device.id, device.name, device.platform, device.lastSeenAt, device.online]),
+  ]);
+}
+
+router.get('/session', playbackEndpoint(getSnapshot));
+router.post('/devices', playbackEndpoint(registerDevice));
+router.post('/heartbeat', playbackEndpoint(heartbeat));
+router.post('/ack', playbackEndpoint(acknowledge));
+router.post('/command', playbackEndpoint(applyCommand));
+
+router.get('/events', (req, res) => {
+  const { userId } = req.user;
+  const count = owners.get(userId) ?? 0;
+  if (openStreams >= MAX_STREAMS || count >= MAX_OWNER_STREAMS) {
+    return res.set('Retry-After', '5').status(429).json({ error: 'Too many open playback streams' });
+  }
+  owners.set(userId, count + 1);
+  openStreams++;
+  res.set({
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'private, no-store, no-transform',
+    'X-Accel-Buffering': 'no',
+  });
+  let closed = false;
+  let refreshing = false;
+  let needsRefresh = false;
+  let lastEvent;
+
+  function finish() {
+    if (closed) return;
+    closed = true;
+    clearInterval(refreshTimer);
+    clearInterval(keepaliveTimer);
+    clearTimeout(expiryTimer);
+    unsubscribe();
+    openStreams--;
+    const remaining = owners.get(userId) - 1;
+    if (remaining) owners.set(userId, remaining);
+    else owners.delete(userId);
+    if (!res.destroyed && !res.writableEnded) res.end();
+  }
+
+  function send(value) {
+    if (closed) return;
+    if (res.destroyed || !res.write(value)) finish();
+  }
+
+  async function refresh() {
+    if (closed) return;
+    if (refreshing) {
+      needsRefresh = true;
+      return;
+    }
+    refreshing = true;
+    try {
+      do {
+        needsRefresh = false;
+        const snapshot = await getSnapshot(userId);
+        if (closed) return;
+        const version = eventVersion(snapshot);
+        if (version !== lastEvent) {
+          const auth = await readAuthenticatedUser(req.headers.authorization);
+          if (closed) return;
+          if (auth?.userId !== userId) return finish();
+          lastEvent = version;
+          send(`event: session\ndata: ${JSON.stringify(snapshot)}\n\n`);
+        }
+      } while (needsRefresh && !closed);
+    } catch (error) {
+      console.warn('Playback event stream refresh failed:', error.code || error.name);
+      finish();
+    } finally {
+      refreshing = false;
+    }
+  }
+
+  const unsubscribe = subscribe(userId, refresh);
+  const refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
+  const keepaliveTimer = setInterval(() => send(': keepalive\n\n'), KEEPALIVE_INTERVAL);
+  const expiryTimer = setTimeout(finish, STREAM_DURATION);
+  res.once('close', finish);
+  if (res.destroyed) return finish();
+  res.flushHeaders();
+  send('retry: 2000\n\n');
+  void refresh();
+});
+
+module.exports = router;
+</file>
+
+<file path="services/images.js">
+const PNG_HEADER = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const WEBP_CHUNKS = new Set(['VP8 ', 'VP8L', 'VP8X']);
+
+function detectImageType(buffer) {
+  if (!Buffer.isBuffer(buffer)) return null;
+  if (buffer.length >= 4 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return { contentType: 'image/jpeg', extension: '.jpg' };
+  }
+  if (buffer.length >= 24 && buffer.subarray(0, 8).equals(PNG_HEADER) && buffer.toString('ascii', 12, 16) === 'IHDR') {
+    return { contentType: 'image/png', extension: '.png' };
+  }
+  const gifHeader = buffer.toString('ascii', 0, 6);
+  if (buffer.length >= 13 && (gifHeader === 'GIF87a' || gifHeader === 'GIF89a')) {
+    return { contentType: 'image/gif', extension: '.gif' };
+  }
+  if (buffer.length >= 16 && buffer.toString('ascii', 0, 4) === 'RIFF' &&
+      buffer.toString('ascii', 8, 12) === 'WEBP' && WEBP_CHUNKS.has(buffer.toString('ascii', 12, 16))) {
+    return { contentType: 'image/webp', extension: '.webp' };
+  }
+  return null;
+}
+
+module.exports = { detectImageType };
+</file>
+
+<file path="services/playback.js">
+const { createHash, timingSafeEqual } = require('node:crypto');
+const { EventEmitter } = require('node:events');
+const prisma = require('../lib/prisma');
+const {
+  ONLINE_MS, PlaybackError, emptySession, hasLiveLease, leaseDeadline, boundedPosition,
+  projectedPosition, presentSession, optionalPosition, validatePlaybackCommand, validateDeviceId,
+  validatePositionReport, shuffledOrder, navigationCandidates,
+} = require('./playbackState');
+
+const MAX_DEVICES = 20;
+const DEVICE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+const platforms = new Set(['browser', 'telegram']);
+const events = new EventEmitter();
+
+function subscribe(userId, listener) {
+  const key = String(userId);
+  events.on(key, listener);
+  return () => events.off(key, listener);
+}
+
+function publish(userId) {
+  events.emit(String(userId));
+}
+
+async function databaseTime(connection = prisma) {
+  const [row] = await connection.$queryRaw`SELECT clock_timestamp() AS "now"`;
+  return row.now;
+}
+
+function deviceWhere(userId, id) {
+  return { userId_id: { userId, id } };
+}
+
+function deviceCredentials(body) {
+  const id = validateDeviceId(body?.deviceId);
+  const { deviceKey } = body;
+  if (typeof deviceKey !== 'string' || !/^[a-z\d_-]{32,128}$/i.test(deviceKey)) {
+    throw new PlaybackError(400, 'Invalid device key');
+  }
+  const keyHash = createHash('sha256').update(deviceKey).digest('hex');
+  return { id, keyHash };
+}
+
+function matchesDevice(device, credentials) {
+  return Boolean(device && device.keyHash.length === credentials.keyHash.length &&
+    timingSafeEqual(Buffer.from(device.keyHash), Buffer.from(credentials.keyHash)));
+}
+
+function expectedVersion(body) {
+  const version = body?.expectedVersion;
+  if (!Number.isInteger(version) || version < 0 || version > 2147483647) {
+    throw new PlaybackError(400, 'Invalid session version');
+  }
+  return version;
+}
+
+function isOnline(device, now) {
+  return Boolean(device && now.getTime() - device.lastSeenAt.getTime() < ONLINE_MS);
+}
+
+async function getSnapshot(userId) {
+  const [session, devices] = await Promise.all([
+    prisma.playbackSession.findUnique({ where: { userId } }),
+    prisma.playbackDevice.findMany({
+      where: { userId },
+      select: { id: true, name: true, platform: true, lastSeenAt: true },
+      orderBy: [{ lastSeenAt: 'desc' }, { id: 'asc' }],
+      take: MAX_DEVICES,
+    }),
+  ]);
+  const now = await databaseTime();
+  return {
+    serverTime: now.getTime(),
+    session: presentSession(session ?? emptySession, now),
+    devices: devices.map(device => ({
+      ...device,
+      lastSeenAt: device.lastSeenAt.getTime(),
+      online: isOnline(device, now),
+    })),
+  };
+}
+
+async function registerDevice(userId, body) {
+  const credentials = deviceCredentials(body);
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  if (!name || name.length > 80 || /[\x00-\x1f\x7f]/.test(name)) {
+    throw new PlaybackError(400, 'Invalid device name');
+  }
+  if (!platforms.has(body.platform)) throw new PlaybackError(400, 'Invalid device platform');
+
+  await prisma.$transaction(async tx => {
+    // Serialize registration and eviction for this owner to enforce the roster cap.
+    const owners = await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
+    if (!owners.length) throw new PlaybackError(401, 'Account no longer exists');
+    const now = await databaseTime(tx);
+    const where = deviceWhere(userId, credentials.id);
+    const device = await tx.playbackDevice.findUnique({ where });
+    const data = { name, platform: body.platform, lastSeenAt: now };
+    if (device) {
+      if (!matchesDevice(device, credentials)) throw new PlaybackError(403, 'Device credentials do not match');
+      await tx.playbackDevice.update({ where, data });
+      return;
+    }
+
+    const session = await tx.playbackSession.upsert({ where: { userId }, create: { userId }, update: {} });
+    const protectedIds = [session.activeDeviceId, session.pendingDeviceId].filter(Boolean);
+    const eligible = { userId, id: { notIn: protectedIds } };
+    await tx.playbackDevice.deleteMany({
+      where: { ...eligible, lastSeenAt: { lt: new Date(now.getTime() - DEVICE_RETENTION_MS) } },
+    });
+    if (await tx.playbackDevice.count({ where: { userId } }) >= MAX_DEVICES) {
+      const offline = { ...eligible, lastSeenAt: { lt: new Date(now.getTime() - ONLINE_MS) } };
+      const oldest = await tx.playbackDevice.findFirst({ where: offline, orderBy: { lastSeenAt: 'asc' } });
+      if (!oldest) throw new PlaybackError(409, 'Too many playback devices are online');
+      const removed = await tx.playbackDevice.deleteMany({ where: { ...offline, id: oldest.id } });
+      if (!removed.count) throw new PlaybackError(409, 'Device roster changed');
+    }
+    await tx.playbackDevice.create({ data: { ...data, ...credentials, userId } });
+  });
+  publish(userId);
+  return getSnapshot(userId);
+}
+
+async function verifyDevice(userId, body, touch = false) {
+  const credentials = deviceCredentials(body);
+  const device = await prisma.playbackDevice.findUnique({ where: deviceWhere(userId, credentials.id) });
+  if (!matchesDevice(device, credentials)) throw new PlaybackError(403, 'Unknown playback device');
+  if (touch) {
+    const now = await databaseTime();
+    if (now > device.lastSeenAt) {
+      const touched = await prisma.playbackDevice.updateMany({
+        where: { userId, id: device.id, keyHash: credentials.keyHash, lastSeenAt: { lt: now } },
+        data: { lastSeenAt: now },
+      });
+      if (!touched.count) {
+        const current = await prisma.playbackDevice.findUnique({ where: deviceWhere(userId, credentials.id) });
+        if (!matchesDevice(current, credentials)) throw new PlaybackError(403, 'Unknown playback device');
+      }
+    }
+  }
+  return device.id;
+}
+
+async function mutateSession(userId, version, transition) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const session = await prisma.playbackSession.findUnique({ where: { userId } });
+    if (!session) throw new PlaybackError(403, 'No registered playback session');
+    if (version !== undefined && session.version !== version) {
+      throw new PlaybackError(409, 'Playback session changed');
+    }
+    const now = await databaseTime();
+    const mutation = await transition(session, now);
+    if (!mutation) return;
+    const { changes, extendOnly } = mutation;
+    const result = await prisma.playbackSession.updateMany({
+      // Heartbeats leave version stable. The lease belongs in the CAS so a handoff
+      // cannot shorten an already-issued permit for the outgoing audio device.
+      where: {
+        userId, version: session.version, leaseUntil: session.leaseUntil,
+        position: session.position, positionAt: session.positionAt,
+      },
+      data: extendOnly ? changes : { ...changes, version: { increment: 1 } },
+    });
+    if (result.count) {
+      publish(userId);
+      return;
+    }
+  }
+  throw new PlaybackError(409, 'Playback session changed');
+}
+
+function claim(session, now, deviceId) {
+  if (hasLiveLease(session, now)) return {};
+  return { activeDeviceId: deviceId, pendingDeviceId: null, handoffResume: false, leaseUntil: leaseDeadline(now) };
+}
+
+function finishHandoff(session, now, position) {
+  return {
+    activeDeviceId: session.pendingDeviceId,
+    pendingDeviceId: null,
+    leaseUntil: leaseDeadline(now),
+    handoffResume: false,
+    playing: session.handoffResume && Boolean(session.trackId),
+    position: boundedPosition(position ?? projectedPosition(session, now), session.duration),
+    positionAt: now,
+  };
+}
+
+async function heartbeat(userId, body) {
+  const deviceId = await verifyDevice(userId, body, true);
+  const report = validatePositionReport(body.report);
+  await mutateSession(userId, undefined, (session, now) => {
+    const live = hasLiveLease(session, now);
+    if (!live && session.pendingDeviceId === deviceId) {
+      return { changes: finishHandoff(session, now) };
+    }
+    if (live && session.activeDeviceId === deviceId && !session.pendingDeviceId) {
+      const changes = { leaseUntil: leaseDeadline(now) };
+      if (session.playing && report?.version === session.version && report.trackId === session.trackId) {
+        changes.position = boundedPosition(report.position, session.duration);
+        changes.positionAt = now;
+      }
+      return { changes, extendOnly: true };
+    }
+    return null;
+  });
+  return getSnapshot(userId);
+}
+
+async function acknowledge(userId, body) {
+  const deviceId = await verifyDevice(userId, body);
+  const version = expectedVersion(body);
+  const position = optionalPosition(body.position);
+  await mutateSession(userId, version, (session, now) => {
+    if (session.activeDeviceId !== deviceId) throw new PlaybackError(403, 'Only the outgoing device may acknowledge');
+    if (!session.pendingDeviceId) throw new PlaybackError(409, 'No pending handoff');
+    return { changes: finishHandoff(session, now, position) };
+  });
+  return getSnapshot(userId);
+}
+
+async function catalogTracks(ids) {
+  if (!ids.length) return new Map();
+  const tracks = await prisma.track.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, duration: true },
+  });
+  return new Map(tracks.map(track => [track.id, track]));
+}
+
+async function playChanges(session, now, deviceId, command) {
+  let queue = command.queue ?? session.queue;
+  const trackId = command.trackId ?? (command.queue ? queue[0] : session.trackId);
+  if (!trackId) throw new PlaybackError(409, 'Select a track first');
+  if (!queue.includes(trackId)) queue = [trackId];
+  const tracks = await catalogTracks(queue);
+  if (!tracks.has(trackId)) throw new PlaybackError(404, 'Track no longer exists');
+  queue = queue.filter(id => tracks.has(id));
+  const index = queue.indexOf(trackId);
+  const duration = tracks.get(trackId).duration;
+  const sameTrack = session.trackId === trackId;
+  const unchangedQueue = queue.length === session.queue.length && queue.every((id, i) => id === session.queue[i]);
+  const position = command.position ?? (sameTrack ? projectedPosition(session, now) : 0);
+  const playingFrom = duration !== null && position >= duration ? 0 : position;
+  return {
+    ...claim(session, now, deviceId),
+    trackId,
+    duration,
+    queue,
+    queueIndex: index,
+    shuffleOrder: session.shuffle && !(sameTrack && unchangedQueue)
+      ? shuffledOrder(queue, index)
+      : session.shuffleOrder,
+    playing: true,
+    position: boundedPosition(playingFrom, duration),
+    positionAt: now,
+  };
+}
+
+async function navigationChanges(session, now, deviceId, command) {
+  const fromEnded = command.type === 'ended';
+  const position = projectedPosition(session, now);
+  const live = hasLiveLease(session, now);
+  if (fromEnded && (session.activeDeviceId !== deviceId || !live)) {
+    throw new PlaybackError(403, 'Only the active device may finish a track');
+  }
+  if (fromEnded && command.trackId !== undefined && command.trackId !== session.trackId) {
+    throw new PlaybackError(409, 'Track already changed');
+  }
+  if (!session.trackId || (fromEnded && !session.playing)) return null;
+  if (fromEnded && session.repeat === 'one') return { playing: true, position: 0, positionAt: now };
+  if (command.type === 'previous' && position > 3) {
+    return { playing: live && session.playing, position: 0, positionAt: now };
+  }
+
+  const candidates = navigationCandidates(session, command.type, fromEnded);
+  const tracks = await catalogTracks(candidates.map(index => session.queue[index]));
+  const index = candidates.find(candidate => tracks.has(session.queue[candidate]));
+  if (index === undefined) {
+    return { playing: false, position: fromEnded ? session.duration ?? position : position, positionAt: now };
+  }
+  const trackId = session.queue[index];
+  return {
+    ...claim(session, now, deviceId), trackId, duration: tracks.get(trackId).duration,
+    queueIndex: index, playing: true, position: 0, positionAt: now,
+  };
+}
+
+async function transferChanges(userId, session, now, targetDeviceId) {
+  const live = hasLiveLease(session, now);
+  if (live && targetDeviceId === session.pendingDeviceId) return null;
+  if (live && session.pendingDeviceId) throw new PlaybackError(409, 'Handoff is already pending');
+  if (live && targetDeviceId === session.activeDeviceId) return null;
+
+  const target = await prisma.playbackDevice.findUnique({ where: deviceWhere(userId, targetDeviceId) });
+  if (!target) throw new PlaybackError(403, 'Unknown handoff target');
+  if (!isOnline(target, now)) throw new PlaybackError(409, 'Handoff device is offline');
+  if (live) return { pendingDeviceId: targetDeviceId, handoffResume: session.playing };
+
+  return finishHandoff({
+    ...session,
+    pendingDeviceId: targetDeviceId,
+    handoffResume: session.pendingDeviceId ? session.handoffResume : false,
+  }, now);
+}
+
+async function commandChanges(userId, session, now, deviceId, command) {
+  if (command.type === 'transfer') return transferChanges(userId, session, now, command.targetDeviceId);
+
+  const live = hasLiveLease(session, now);
+  if (session.pendingDeviceId && (live || command.type !== 'play')) {
+    throw new PlaybackError(409, 'Handoff is pending');
+  }
+  if (session.pendingDeviceId && deviceId !== session.pendingDeviceId) {
+    const target = await prisma.playbackDevice.findUnique({ where: deviceWhere(userId, session.pendingDeviceId) });
+    if (isOnline(target, now)) throw new PlaybackError(409, 'Handoff is pending');
+  }
+
+  switch (command.type) {
+    case 'play':
+      return playChanges(session, now, deviceId, command);
+    case 'pause':
+    case 'release': {
+      if (command.type === 'release' && session.activeDeviceId !== deviceId) {
+        throw new PlaybackError(403, 'Only the active device may release playback');
+      }
+      const reported = session.activeDeviceId === deviceId ? command.position : undefined;
+      const position = boundedPosition(reported ?? projectedPosition(session, now), session.duration);
+      const released = command.type === 'release' ? { activeDeviceId: null, leaseUntil: null } : {};
+      return { ...released, playing: false, position, positionAt: now };
+    }
+    case 'seek':
+      if (!session.trackId) throw new PlaybackError(409, 'Select a track first');
+      return { playing: live && session.playing, position: boundedPosition(command.position, session.duration), positionAt: now };
+    case 'next':
+    case 'previous':
+    case 'ended':
+      return navigationChanges(session, now, deviceId, command);
+    case 'setShuffle':
+      if (session.shuffle === command.shuffle) return null;
+      return { shuffle: command.shuffle, shuffleOrder: command.shuffle ? shuffledOrder(session.queue, session.queueIndex) : [] };
+    case 'setRepeat':
+      return session.repeat === command.repeat ? null : { repeat: command.repeat };
+  }
+}
+
+async function applyCommand(userId, body) {
+  const deviceId = await verifyDevice(userId, body, true);
+  const version = expectedVersion(body);
+  const command = validatePlaybackCommand(body.command);
+  await mutateSession(userId, version, async (session, now) => {
+    const changes = await commandChanges(userId, session, now, deviceId, command);
+    return changes ? { changes } : null;
+  });
+  return getSnapshot(userId);
+}
+
+module.exports = { getSnapshot, registerDevice, heartbeat, acknowledge, applyCommand, subscribe, PlaybackError };
+</file>
+
+<file path="services/playbackState.js">
+const { positiveInt } = require('../lib/validation');
+
+const LEASE_MS = 12_000;
+const ONLINE_MS = 30_000;
+const MAX_QUEUE = 300;
+const MAX_POSITION = 7 * 24 * 60 * 60;
+const repeatOptions = new Set(['none', 'all', 'one']);
+
+class PlaybackError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+const emptySession = {
+  version: 0, activeDeviceId: null, pendingDeviceId: null, leaseUntil: null,
+  handoffResume: false, trackId: null, duration: null, queue: [], queueIndex: -1,
+  shuffleOrder: [], playing: false, position: 0, positionAt: new Date(0), shuffle: false,
+  repeat: 'none',
+};
+
+function hasLiveLease(session, now) {
+  return Boolean(session.activeDeviceId && session.leaseUntil && session.leaseUntil > now);
+}
+
+function leaseDeadline(now) {
+  return new Date(now.getTime() + LEASE_MS);
+}
+
+function boundedPosition(position, duration) {
+  return Math.min(Math.max(position, 0), duration ?? MAX_POSITION);
+}
+
+function projectedPosition(session, now) {
+  if (!session.trackId) return 0;
+  const limit = session.leaseUntil ? Math.min(now.getTime(), session.leaseUntil.getTime()) : 0;
+  const elapsed = session.playing ? Math.max(0, limit - session.positionAt.getTime()) / 1000 : 0;
+  return boundedPosition(session.position + elapsed, session.duration);
+}
+
+function presentSession(session, now) {
+  return {
+    version: session.version,
+    activeDeviceId: session.activeDeviceId,
+    pendingDeviceId: session.pendingDeviceId,
+    leaseUntil: session.leaseUntil?.getTime() ?? null,
+    trackId: session.trackId,
+    duration: session.duration,
+    queue: session.queue,
+    queueIndex: session.queueIndex,
+    playing: !session.pendingDeviceId && hasLiveLease(session, now) && session.playing,
+    position: projectedPosition(session, now),
+    positionAt: session.positionAt.getTime(),
+    shuffle: session.shuffle,
+    repeat: session.repeat,
+  };
+}
+
+function optionalPosition(position) {
+  if (position === undefined) return undefined;
+  if (typeof position !== 'number' || !Number.isFinite(position) || position < 0 || position > MAX_POSITION) {
+    throw new PlaybackError(400, 'Invalid playback position');
+  }
+  return position;
+}
+
+function validateTrackId(value) {
+  const id = positiveInt(value);
+  if (!id) throw new PlaybackError(400, 'Invalid track ID');
+  return id;
+}
+
+function validatePositionReport(report) {
+  if (report === undefined) return null;
+  if (!report || !Number.isInteger(report.version) || report.version < 0 || report.version > 2147483647) {
+    throw new PlaybackError(400, 'Invalid position report');
+  }
+  const position = optionalPosition(report.position);
+  if (position === undefined) throw new PlaybackError(400, 'Playback position required');
+  return { trackId: validateTrackId(report.trackId), version: report.version, position };
+}
+
+function validatePlaybackCommand(command) {
+  if (!command || typeof command !== 'object') throw new PlaybackError(400, 'Invalid playback command');
+  const { type } = command;
+  switch (type) {
+    case 'play': {
+      const trackId = command.trackId === undefined ? undefined : validateTrackId(command.trackId);
+      let queue;
+      if (command.queue !== undefined) {
+        if (!Array.isArray(command.queue) || !command.queue.length || command.queue.length > MAX_QUEUE) {
+          throw new PlaybackError(400, 'Invalid queue size');
+        }
+        queue = [...new Set(command.queue.map(validateTrackId))];
+        if (trackId && !queue.includes(trackId)) throw new PlaybackError(400, 'Track is not in the queue');
+      }
+      return { type, trackId, queue, position: optionalPosition(command.position) };
+    }
+    case 'pause':
+    case 'release':
+      return { type, position: optionalPosition(command.position) };
+    case 'seek': {
+      const position = optionalPosition(command.position);
+      if (position === undefined) throw new PlaybackError(400, 'Playback position required');
+      return { type, position };
+    }
+    case 'next':
+    case 'previous':
+      return { type };
+    case 'ended':
+      return { type, trackId: command.trackId === undefined ? undefined : validateTrackId(command.trackId) };
+    case 'setShuffle':
+      if (typeof command.shuffle !== 'boolean') throw new PlaybackError(400, 'Invalid shuffle setting');
+      return { type, shuffle: command.shuffle };
+    case 'setRepeat':
+      if (!repeatOptions.has(command.repeat)) throw new PlaybackError(400, 'Invalid repeat setting');
+      return { type, repeat: command.repeat };
+    case 'transfer':
+      return { type, targetDeviceId: validateDeviceId(command.targetDeviceId) };
+    default:
+      throw new PlaybackError(400, 'Unknown playback command');
+  }
+}
+
+function validateDeviceId(value) {
+  if (typeof value !== 'string' || !/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(value)) {
+    throw new PlaybackError(400, 'Invalid device ID');
+  }
+  return value.toLowerCase();
+}
+
+function shuffledOrder(queue, first) {
+  if (!queue.length) return [];
+  const remaining = queue.map((trackId, index) => index).filter(index => index !== first);
+  for (let end = remaining.length - 1; end > 0; end--) {
+    const swap = Math.floor(Math.random() * (end + 1));
+    [remaining[end], remaining[swap]] = [remaining[swap], remaining[end]];
+  }
+  return first < 0 ? remaining : [first, ...remaining];
+}
+
+function navigationCandidates(session, direction, fromEnded) {
+  const order = session.shuffle && session.shuffleOrder.length === session.queue.length
+    ? session.shuffleOrder : session.queue.map((trackId, index) => index);
+  const position = order.indexOf(session.queueIndex);
+  if (direction === 'previous') return order.slice(0, Math.max(position, 0)).reverse().concat(order.slice(0, 1));
+  const following = order.slice(position + 1);
+  if (fromEnded && session.repeat !== 'all') return following;
+  return following.concat(order.slice(0, position + 1));
+}
+
+module.exports = {
+  LEASE_MS, ONLINE_MS, PlaybackError, emptySession, hasLiveLease, leaseDeadline, boundedPosition,
+  projectedPosition, presentSession, optionalPosition, validatePlaybackCommand, validateDeviceId,
+  validatePositionReport, shuffledOrder, navigationCandidates,
+};
+</file>
+
+<file path="services/telegramIdentity.js">
+function telegramPhotoUrl(photo) {
+  if (!photo) return null;
+  try {
+    const url = new URL(photo);
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function telegramIdentity(user) {
+  const telegramId = String(user.id);
+  return {
+    telegramId,
+    telegramName: [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || `User${telegramId}`,
+    telegramUsername: user.username ?? null,
+    telegramPhotoUrl: telegramPhotoUrl(user.photo_url),
+  };
+}
+
+module.exports = { telegramIdentity };
+</file>
+
+<file path="services/telegramLink.js">
+const bcrypt = require('bcrypt');
+const { createHash, randomBytes } = require('node:crypto');
+const prisma = require('../lib/prisma');
+const { cleanupUserAvatar } = require('./userAccounts');
+
+const LINK_LIFETIME_MS = 5 * 60_000;
+const linkableFields = {
+  id: true, username: true, password: true, isAdmin: true, profileImageUrl: true,
+  telegramId: true, telegramAuthVersion: true,
+};
+
+class TelegramLinkError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function hashCode(code) {
+  if (typeof code !== 'string' || !/^[A-Za-z0-9_-]{24}$/.test(code)) {
+    throw new TelegramLinkError(400, 'Enter the code shown on the website');
+  }
+  return createHash('sha256').update(code).digest('hex');
+}
+
+const expiredLink = () => new TelegramLinkError(404, 'Link code is invalid, expired or already used');
+
+async function passwordAccount(id, password) {
+  if (typeof password !== 'string' || !password || Buffer.byteLength(password) > 1024) {
+    throw new TelegramLinkError(400, 'Enter your website password');
+  }
+  const account = await prisma.user.findUnique({ where: { id }, select: linkableFields });
+  if (!account?.username || !account.password) throw new TelegramLinkError(409, 'A website login is required');
+  if (!await bcrypt.compare(password, account.password)) {
+    throw new TelegramLinkError(400, 'Website password is incorrect');
+  }
+  return account;
+}
+
+async function serializable(transaction) {
+  try {
+    return await prisma.$transaction(transaction, { isolationLevel: 'Serializable' });
+  } catch (error) {
+    if (error.code === 'P2034' || error.code === 'P2002' || error.code === 'P2003' || error.code === 'P2025') {
+      throw new TelegramLinkError(409, 'Account data changed. Try again');
+    }
+    throw error;
+  }
+}
+
+async function createTelegramLinkCode(userId, password) {
+  const verified = await passwordAccount(userId, password);
+  if (verified.telegramId) throw new TelegramLinkError(409, 'Telegram is already linked');
+  const code = randomBytes(18).toString('base64url');
+  const codeHash = hashCode(code);
+  const expiresAt = new Date(Date.now() + LINK_LIFETIME_MS);
+
+  await serializable(async (tx) => {
+    const account = await tx.user.findUnique({ where: { id: userId }, select: linkableFields });
+    if (!account || account.password !== verified.password || account.telegramId) {
+      throw new TelegramLinkError(409, 'Account data changed. Try again');
+    }
+    await tx.telegramLinkCode.upsert({
+      where: { userId },
+      create: { userId, codeHash, expiresAt },
+      update: { codeHash, expiresAt },
+    });
+  });
+  return { code, expiresAt };
+}
+
+async function linkAccounts(db, codeHash, telegramId, now) {
+  const link = await db.telegramLinkCode.findUnique({
+    where: { codeHash },
+    select: { user: { select: linkableFields }, expiresAt: true },
+  });
+  if (!link || link.expiresAt <= now) throw expiredLink();
+  const target = link.user;
+  if (!target.username || !target.password || target.telegramId) throw expiredLink();
+  const duplicate = await db.user.findUnique({ where: { telegramId }, select: linkableFields });
+  if (duplicate && (duplicate.isAdmin || duplicate.password || target.isAdmin)) {
+    throw new TelegramLinkError(409, 'This Telegram account cannot be merged');
+  }
+  return { target, duplicate };
+}
+
+async function previewTelegramLink(code, telegramId) {
+  const { target, duplicate } = await linkAccounts(prisma, hashCode(code), telegramId, new Date());
+  return { username: target.username, mergeRequired: Boolean(duplicate) };
+}
+
+async function moveAccountData(tx, from, to) {
+  const favorites = await tx.favorite.findMany({
+    where: { userId: from },
+    select: { trackId: true, createdAt: true, updatedAt: true },
+  });
+  if (favorites.length) {
+    await tx.favorite.createMany({ data: favorites.map((favorite) => ({ ...favorite, userId: to })), skipDuplicates: true });
+    await tx.favorite.deleteMany({ where: { userId: from } });
+  }
+  await tx.review.updateMany({ where: { userId: from }, data: { userId: to } });
+  await tx.complaint.updateMany({ where: { userId: from }, data: { userId: to } });
+}
+
+async function confirmTelegramLink(code, identity, confirmMerge) {
+  const codeHash = hashCode(code);
+  const result = await serializable(async (tx) => {
+    const now = new Date();
+    const { target, duplicate } = await linkAccounts(tx, codeHash, identity.telegramId, now);
+    if (duplicate && !confirmMerge) throw new TelegramLinkError(409, 'Confirm the account merge');
+    const consumed = await tx.telegramLinkCode.deleteMany({
+      where: { userId: target.id, codeHash, expiresAt: { gt: now } },
+    });
+    if (consumed.count !== 1) throw expiredLink();
+
+    const profileImageUrl = target.profileImageUrl ?? duplicate?.profileImageUrl ?? null;
+    if (duplicate) {
+      await moveAccountData(tx, duplicate.id, target.id);
+      await tx.user.delete({ where: { id: duplicate.id } });
+    }
+    const user = await tx.user.update({
+      where: { id: target.id },
+      data: { ...identity, profileImageUrl, telegramAuthVersion: { increment: 1 } },
+      select: { id: true, isAdmin: true, telegramId: true, telegramAuthVersion: true },
+    });
+    return { user, unusedAvatar: duplicate?.profileImageUrl !== profileImageUrl ? duplicate : null };
+  });
+  if (result.unusedAvatar) await cleanupUserAvatar(result.unusedAvatar.id, result.unusedAvatar.profileImageUrl);
+  return result.user;
+}
+
+async function unlinkTelegram(userId, password) {
+  const verified = await passwordAccount(userId, password);
+  if (!verified.telegramId) throw new TelegramLinkError(409, 'Telegram is not linked');
+  return serializable(async (tx) => {
+    const user = await tx.user.update({
+      where: {
+        id: userId,
+        password: verified.password,
+        telegramId: verified.telegramId,
+        telegramAuthVersion: verified.telegramAuthVersion,
+      },
+      data: {
+        telegramId: null, telegramName: null, telegramUsername: null, telegramPhotoUrl: null,
+        telegramAuthVersion: { increment: 1 },
+      },
+      select: { id: true, isAdmin: true },
+    });
+    await tx.telegramLinkCode.deleteMany({ where: { userId } });
+    return user;
+  });
+}
+
+module.exports = {
+  TelegramLinkError, createTelegramLinkCode, previewTelegramLink, confirmTelegramLink, unlinkTelegram,
+};
+</file>
+
+<file path="services/tracks.js">
+const { randomUUID } = require('node:crypto');
+const { createReadStream } = require('node:fs');
+const path = require('node:path');
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
+const { detectImageType } = require('./images');
+
+const AUDIO_LIMIT = 100 * 1024 * 1024;
+const IMAGE_LIMIT = 5 * 1024 * 1024;
+const BATCH_LIMIT = 200 * 1024 * 1024;
+const MAX_TRACKS = 5;
+const TEXT_LIMIT = 300;
+
+class TrackError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function trackId(value) {
+  const id = positiveInt(value);
+  if (id === null) throw new TrackError(400, 'Invalid track ID');
+  return id;
+}
+
+function trackText(value) {
+  return typeof value === 'string' ? value.trim().slice(0, TEXT_LIMIT) : '';
+}
+
+function normalizeDuration(value) {
+  return Number.isFinite(value) && value > 0 && value <= 2147483647 ? Math.round(value) : null;
+}
+
+function audioDetails(format) {
+  if (format.hasVideo || !format.sampleRate || !format.numberOfChannels) return null;
+  const { container = '', codec = '' } = format;
+  if (/^MPEG.*Layer (?:I{1,3}|[123])\b/i.test(codec)) return { extension: '.mp3', contentType: 'audio/mpeg' };
+  if (container === 'FLAC') return { extension: '.flac', contentType: 'audio/flac' };
+  if (container === 'Ogg' && /Vorbis|Opus|Speex|FLAC/i.test(codec)) return { extension: '.ogg', contentType: 'audio/ogg' };
+  if (container === 'WAVE') return { extension: '.wav', contentType: 'audio/wav' };
+  if (/^ADTS\b/i.test(container)) return { extension: '.aac', contentType: 'audio/aac' };
+  if (/(?:AAC|ALAC)/i.test(codec)) return { extension: '.m4a', contentType: 'audio/mp4' };
+  return null;
+}
+
+function inspectImage(buffer, required = false) {
+  if (Buffer.isBuffer(buffer) && buffer.length > IMAGE_LIMIT && required) {
+    throw new TrackError(413, 'Image exceeds 5 MiB');
+  }
+  const details = Buffer.isBuffer(buffer) && buffer.length <= IMAGE_LIMIT && detectImageType(buffer);
+  if (details) return { buffer, ...details };
+  if (required) throw new TrackError(400, 'Unsupported image file');
+  return null;
+}
+
+async function prepareTrack({ audio, image, overrides = {}, fallback = {}, loadFallbackCover }) {
+  if (!audio?.size) throw new TrackError(400, 'Audio file required');
+  if (audio.size > AUDIO_LIMIT) throw new TrackError(413, 'Audio file exceeds 100 MiB');
+
+  let info;
+  try {
+    const metadata = await import('music-metadata');
+    info = audio.path
+      ? await metadata.parseFile(audio.path, { duration: true })
+      : await metadata.parseBuffer(audio.buffer, undefined, { duration: true });
+  } catch {
+    throw new TrackError(400, 'Invalid or unsupported audio file');
+  }
+
+  const details = audioDetails(info.format);
+  if (!details) throw new TrackError(400, 'Unsupported audio format');
+  const source = audio.originalname || '';
+  const name = path.parse(path.win32.basename(source)).name;
+  const tags = info.common;
+  const cover = image
+    ? inspectImage(image, true)
+    : tags.picture?.map(item => inspectImage(Buffer.from(item.data.buffer, item.data.byteOffset, item.data.byteLength))).find(Boolean);
+  const fallbackCover = !cover && loadFallbackCover ? await loadFallbackCover() : null;
+
+  return {
+    audio: { ...audio, ...details },
+    cover: cover || inspectImage(fallbackCover),
+    data: {
+      title: trackText(overrides.title) || trackText(tags.title) || trackText(fallback.title) || trackText(name) || 'Unknown',
+      artist: trackText(overrides.artist) || trackText(tags.artist) || trackText(fallback.artist) || 'Unknown',
+      album: trackText(overrides.album) || trackText(tags.album) || null,
+      genre: trackText(overrides.genre) || trackText(tags.genre?.[0]) || null,
+      duration: normalizeDuration(info.format.duration) ?? normalizeDuration(fallback.duration),
+    },
+  };
+}
+
+function bucket(name) {
+  return require('../lib/supabase').storage.from(name);
+}
+
+function publicStorageKey(value, bucketName) {
+  if (typeof value !== 'string' || !process.env.SUPABASE_URL) return null;
+  try {
+    const source = new URL(value);
+    const base = new URL(process.env.SUPABASE_URL);
+    const prefix = `${base.pathname.replace(/\/$/, '')}/storage/v1/object/public/${bucketName}/`;
+    if (source.origin !== base.origin || source.username || source.password || !source.pathname.startsWith(prefix)) return null;
+    const parts = source.pathname.slice(prefix.length).split('/').map(decodeURIComponent);
+    if (parts.some(part => !part || part === '.' || part === '..' || /[\\/\x00-\x1f]/.test(part))) return null;
+    if (bucketName === 'images' && parts[0] === 'avatars') return null;
+    return parts.join('/');
+  } catch {
+    return null;
+  }
+}
+
+async function removeObjects(objects) {
+  for (const { name, key } of objects) {
+    try {
+      const { error } = await bucket(name).remove([key]);
+      if (error) throw error;
+    } catch (error) {
+      console.warn('Track storage cleanup failed', { bucket: name, key, message: error.message });
+    }
+  }
+}
+
+async function uploadObject(name, key, file, attempted) {
+  const storage = bucket(name);
+  attempted.push({ name, key });
+  const stream = file.path ? createReadStream(file.path) : null;
+  try {
+    const { error } = await storage.upload(key, stream || file.buffer, {
+      contentType: file.contentType,
+      upsert: false,
+    });
+    if (error) throw error;
+    return storage.getPublicUrl(key).data.publicUrl;
+  } finally {
+    stream?.destroy();
+  }
+}
+
+async function saveTracks(inputs) {
+  if (!inputs.length || inputs.length > MAX_TRACKS) throw new TrackError(400, 'Invalid track count');
+  if (inputs.reduce((total, input) => total + (input.audio?.size || 0), 0) > BATCH_LIMIT) {
+    throw new TrackError(413, 'Total audio size exceeds 200 MiB');
+  }
+
+  const attempted = [];
+  try {
+    const records = [];
+    for (const input of inputs) {
+      const { audio, cover, data } = await prepareTrack(input);
+      const name = randomUUID();
+      const filename = await uploadObject('tracks', name + audio.extension, audio, attempted);
+      const imageUrl = cover ? await uploadObject('images', name + cover.extension, cover, attempted) : null;
+      records.push({ ...data, filename, imageUrl });
+    }
+    if (records.length === 1) return [await prisma.track.create({ data: records[0] })];
+    return await prisma.$transaction(records.map(data => prisma.track.create({ data })));
+  } catch (error) {
+    await removeObjects(attempted);
+    throw error;
+  }
+}
+
+function legacyName(value, directory) {
+  if (typeof value !== 'string') return null;
+  const prefix = new RegExp(`^/?(?:public/)?${directory}/`);
+  const name = value.replace(/\\/g, '/').replace(prefix, '');
+  if (!name || name.startsWith('.') || /[\\/:*?"<>|\x00-\x1f]/.test(name) || /[. ]$/.test(name)) return null;
+  return name;
+}
+
+function coverUrl(value) {
+  if (typeof value === 'string' && /^https?:\/\//i.test(value)) return value;
+  const name = legacyName(value, 'images');
+  return name ? `/images/${encodeURIComponent(name)}` : null;
+}
+
+async function updateTrack(value, fields) {
+  const id = trackId(value);
+  const data = {};
+  for (const field of ['title', 'artist', 'album', 'genre']) {
+    const value = fields[field];
+    if (value === undefined) continue;
+    const nullable = field === 'album' || field === 'genre';
+    if (value === null && nullable) {
+      data[field] = null;
+      continue;
+    }
+    if (typeof value !== 'string' || value.trim().length > TEXT_LIMIT || (!nullable && !value.trim())) {
+      throw new TrackError(400, `Invalid ${field}`);
+    }
+    data[field] = value.trim() || null;
+  }
+  try {
+    return await prisma.track.update({ where: { id }, data });
+  } catch (error) {
+    if (error.code === 'P2025') throw new TrackError(404, 'Track not found');
+    throw error;
+  }
+}
+
+async function deleteTrack(value) {
+  const id = trackId(value);
+  let track;
+  try {
+    track = await prisma.$transaction(async tx => {
+      await tx.favorite.deleteMany({ where: { trackId: id } });
+      await tx.review.deleteMany({ where: { trackId: id } });
+      return tx.track.delete({ where: { id } });
+    });
+  } catch (error) {
+    if (error.code === 'P2025') throw new TrackError(404, 'Track not found');
+    throw error;
+  }
+  const audio = publicStorageKey(track.filename, 'tracks');
+  const cover = publicStorageKey(track.imageUrl, 'images');
+  const objects = [];
+  if (audio) objects.push({ name: 'tracks', key: audio });
+  if (cover) objects.push({ name: 'images', key: cover });
+  await removeObjects(objects);
+}
+
+module.exports = {
+  AUDIO_LIMIT, BATCH_LIMIT, IMAGE_LIMIT, MAX_TRACKS,
+  TrackError, trackId, publicStorageKey, legacyName, coverUrl, saveTracks, updateTrack, deleteTrack,
+};
+</file>
+
+<file path="test/playbackState.test.js">
+const assert = require('node:assert/strict');
+const { test } = require('node:test');
+const {
+  LEASE_MS, PlaybackError, emptySession, hasLiveLease, leaseDeadline, presentSession,
+  projectedPosition, navigationCandidates, shuffledOrder, validatePlaybackCommand, validatePositionReport,
+} = require('../services/playbackState');
+
+const start = new Date(1_800_000_000_000);
+const at = milliseconds => new Date(start.getTime() + milliseconds);
+const active = {
+  ...emptySession,
+  activeDeviceId: 'browser',
+  leaseUntil: leaseDeadline(start),
+  trackId: 12,
+  duration: 90,
+  queueIndex: 0,
+  queue: [12, 13, 14],
+  playing: true,
+  position: 4.5,
+  positionAt: start,
+};
+
+test('playback prediction stops advancing at the active lease deadline', () => {
+  assert.equal(projectedPosition(active, at(3200)), 7.7);
+  assert.equal(projectedPosition(active, at(LEASE_MS + 60_000)), 16.5);
+  assert.equal(hasLiveLease(active, at(LEASE_MS - 1)), true);
+  assert.equal(hasLiveLease(active, at(LEASE_MS)), false);
+  assert.equal(presentSession(active, at(LEASE_MS)).playing, false);
+  assert.equal(projectedPosition({ ...active, duration: 6 }, at(3200)), 6);
+});
+
+test('pending handoff suppresses playback for both devices before the lease fence', () => {
+  const snapshot = presentSession({ ...active, pendingDeviceId: 'telegram' }, at(1000));
+  assert.equal(snapshot.activeDeviceId, 'browser');
+  assert.equal(snapshot.pendingDeviceId, 'telegram');
+  assert.equal(snapshot.playing, false);
+  assert.equal(snapshot.position, 5.5);
+  assert.equal(snapshot.positionAt, start.getTime());
+});
+
+test('natural end respects saved shuffle order and repeats only in repeat-all mode', () => {
+  const shuffled = { ...active, queueIndex: 1, shuffle: true, shuffleOrder: [0, 2, 1] };
+  assert.deepEqual(navigationCandidates(shuffled, 'ended', true), []);
+  assert.deepEqual(navigationCandidates({ ...shuffled, repeat: 'all' }, 'ended', true), [0, 2, 1]);
+  assert.deepEqual(navigationCandidates(shuffled, 'next', false), [0, 2, 1]);
+  assert.equal(navigationCandidates(shuffled, 'previous', false)[0], 2);
+  const order = shuffledOrder(shuffled.queue, 1);
+  assert.equal(order[0], 1);
+  assert.deepEqual([...order].sort(), [0, 1, 2]);
+});
+
+test('commands and heartbeat reports reject invalid media and versions', () => {
+  assert.deepEqual(validatePlaybackCommand({ type: 'play', trackId: 12, queue: [12, 12, 13] }).queue, [12, 13]);
+  assert.throws(() => validatePlaybackCommand({ type: 'play', trackId: 12, queue: [13] }), PlaybackError);
+  assert.throws(() => validatePlaybackCommand({ type: 'seek', position: -1 }), PlaybackError);
+  assert.throws(() => validatePositionReport({ version: 3, trackId: 12, position: Infinity }), PlaybackError);
+  assert.throws(() => validatePositionReport({ version: -1, trackId: 12, position: 1 }), PlaybackError);
+  assert.deepEqual(validatePositionReport({ version: 3, trackId: 12, position: 2 }), { version: 3, trackId: 12, position: 2 });
+});
+</file>
+
+<file path="test/sharedPlayback.integration.test.js">
+const assert = require('node:assert/strict');
+const { createHmac, randomBytes, randomInt, randomUUID } = require('node:crypto');
+const { once } = require('node:events');
+const { test } = require('node:test');
+
+const database = process.env.TEST_DATABASE_URL;
+
+// Use a migrated disposable PostgreSQL database. The default API suite needs no database.
+test('linked devices share a queue, receive remote controls and hand off one output', {
+  skip: !database && 'Set TEST_DATABASE_URL to a migrated disposable PostgreSQL database',
+  timeout: 20_000,
+}, async (t) => {
+  process.env.DATABASE_URL = database;
+  process.env.DIRECT_URL = database;
+  process.env.JWT_SECRET = 'shared-playback-integration-signing-fixture';
+  process.env.TELEGRAM_BOT_TOKEN = '12345:shared-playback-test-fixture';
+  process.env.SUPABASE_URL = 'https://storage.example.test';
+  process.env.SUPABASE_SERVICE_KEY = 'test-fixture';
+
+  const prisma = require('../lib/prisma');
+  const { createApp } = require('../app');
+  const { issueToken } = require('../services/tokens');
+  const connection = createApp({ logRequests: false }).listen(0, '127.0.0.1');
+  await once(connection, 'listening');
+  const base = `http://127.0.0.1:${connection.address().port}`;
+  const username = `test-${randomUUID()}`;
+  const telegramId = String(randomInt(1_000_000_000, 2_000_000_000));
+  const password = 'fixture-password-only';
+  const trackIds = [];
+  const events = new AbortController();
+
+  t.after(async () => {
+    events.abort();
+    connection.closeAllConnections();
+    await new Promise((resolve) => connection.close(resolve));
+    try {
+      const users = await prisma.user.findMany({
+        where: { OR: [{ username }, { telegramId }, { username: `${username}-other` }] },
+        select: { id: true },
+      });
+      const ids = users.map((user) => user.id);
+      await prisma.favorite.deleteMany({ where: { userId: { in: ids } } });
+      await prisma.user.deleteMany({ where: { id: { in: ids } } });
+      await prisma.track.deleteMany({ where: { id: { in: trackIds } } });
+    } finally {
+      await prisma.$disconnect();
+    }
+  });
+
+  async function api(path, { token, body, method = body ? 'POST' : 'GET', status } = {}) {
+    const response = await fetch(base + path, {
+      method,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(5_000),
+    });
+    const payload = await response.json();
+    if (status != null) assert.equal(response.status, status, JSON.stringify(payload));
+    else assert.ok(response.ok, `${path}: ${JSON.stringify(payload)}`);
+    return payload;
+  }
+
+  const { token: browser } = await api('/users/register', { body: { username, password } });
+  const initData = signedTelegramLaunch(telegramId);
+  const { token: oldTelegram } = await api('/auth/telegram', { body: { initData } });
+  const [{ id: first }, { id: second }] = await prisma.track.createManyAndReturn({
+    data: ['One', 'Two'].map((title) => ({
+      title, artist: 'Playback fixture', duration: 180, filename: 'unused.mp3',
+    })),
+    select: { id: true },
+  });
+  trackIds.push(first, second);
+
+  await api('/favorites/add', { token: browser, body: { trackId: first } });
+  await api('/favorites/add', { token: oldTelegram, body: { trackId: first } });
+  await api('/favorites/add', { token: oldTelegram, body: { trackId: second } });
+  const { code } = await api('/auth/telegram/link-code', { token: browser, body: { password } });
+  const preview = await api('/auth/telegram/link/preview', { body: { code, initData } });
+  assert.equal(preview.mergeRequired, true);
+  const { token: telegram } = await api('/auth/telegram/link', {
+    body: { code, initData, confirmMerge: true },
+  });
+  const [siteProfile, telegramProfile] = await Promise.all([
+    api('/users/profile', { token: browser }),
+    api('/users/profile', { token: telegram }),
+  ]);
+  assert.equal(telegramProfile.id, siteProfile.id);
+  await api('/users/profile', { token: oldTelegram, status: 401 });
+  const list = await api('/favorites/get', { token: telegram });
+  assert.deepEqual(list.favorites.map((item) => item.trackId).sort(), [first, second].sort());
+
+  const desktop = device('Desktop', 'browser');
+  const phone = device('Telegram', 'telegram');
+  await api('/playback/devices', { token: browser, body: desktop });
+  const home = await api('/playback/devices', { token: telegram, body: phone });
+  const stream = await fetch(base + '/playback/events', {
+    headers: { Authorization: `Bearer ${telegram}`, Accept: 'text/event-stream' },
+    signal: events.signal,
+  });
+  assert.equal(stream.status, 200);
+  assert.match(stream.headers.get('content-type'), /^text\/event-stream/);
+  const read = readSessionEvent(stream.body);
+
+  function command(token, credentials, expectedVersion, details, status) {
+    const { deviceId, deviceKey } = credentials;
+    return api('/playback/command', {
+      token, body: { deviceId, deviceKey, expectedVersion, command: details }, status,
+    });
+  }
+
+  const start = await command(browser, desktop, home.session.version, {
+    type: 'play', trackId: first, queue: [first, second], position: 12,
+  });
+  const streamed = await read((snapshot) => snapshot.session.version === start.session.version);
+  assert.equal(streamed.session.activeDeviceId, desktop.deviceId);
+  assert.deepEqual(streamed.session.queue, [first, second]);
+  assert.ok(streamed.session.position >= 12);
+  const corrected = await api('/playback/heartbeat', {
+    token: browser,
+    body: { ...desktop, report: { trackId: first, version: start.session.version, position: 15 } },
+  });
+  assert.equal(corrected.session.version, start.session.version);
+  assert.ok(corrected.session.position >= 15);
+
+  const pause = await command(telegram, phone, start.session.version, { type: 'pause' });
+  assert.equal((await api('/playback/session', { token: browser })).session.playing, false);
+  const resume = await command(telegram, phone, pause.session.version, { type: 'play' });
+  assert.equal(resume.session.activeDeviceId, desktop.deviceId);
+  const handoff = await command(telegram, phone, resume.session.version, {
+    type: 'transfer', targetDeviceId: phone.deviceId,
+  });
+  assert.equal(handoff.session.activeDeviceId, desktop.deviceId);
+  assert.equal(handoff.session.pendingDeviceId, phone.deviceId);
+  assert.equal(handoff.session.playing, false);
+  await api('/playback/ack', {
+    token: telegram,
+    body: { ...phone, expectedVersion: handoff.session.version },
+    status: 403,
+  });
+  const switched = await api('/playback/ack', {
+    token: browser,
+    body: {
+      deviceId: desktop.deviceId, deviceKey: desktop.deviceKey,
+      expectedVersion: handoff.session.version, position: 16,
+    },
+  });
+  assert.equal(switched.session.activeDeviceId, phone.deviceId);
+  assert.equal(switched.session.pendingDeviceId, null);
+  assert.equal(switched.session.playing, true);
+  assert.ok(switched.session.position >= 16);
+  await command(browser, desktop, resume.session.version, { type: 'pause' }, 409);
+
+  const waiting = await command(browser, desktop, switched.session.version, {
+    type: 'transfer', targetDeviceId: desktop.deviceId,
+  });
+  assert.equal(waiting.session.activeDeviceId, phone.deviceId);
+  // Simulate the outgoing device losing its connection until its lease expired.
+  await prisma.playbackSession.update({
+    where: { userId: siteProfile.id },
+    data: { leaseUntil: new Date(Date.now() - 1_000) },
+  });
+  const recovered = await api('/playback/heartbeat', { token: browser, body: desktop });
+  assert.equal(recovered.session.activeDeviceId, desktop.deviceId);
+  assert.equal(recovered.session.pendingDeviceId, null);
+  assert.equal(recovered.session.playing, true);
+
+  const otherUser = await prisma.user.create({ data: { username: `${username}-other` } });
+  const otherToken = issueToken(otherUser);
+  const isolated = await api('/playback/session', { token: otherToken });
+  assert.equal(isolated.session.trackId, null);
+  assert.deepEqual(isolated.devices, []);
+  await command(otherToken, desktop, recovered.session.version, { type: 'pause' }, 403);
+
+  await api('/auth/telegram/link', { token: browser, body: { password }, method: 'DELETE' });
+  await api('/playback/session', { token: telegram, status: 401 });
+  const changed = await command(browser, desktop, recovered.session.version, { type: 'pause' });
+  await assert.rejects(read((snapshot) => snapshot.session.version === changed.session.version),
+    /The event stream closed before the expected state arrived/);
+});
+
+function signedTelegramLaunch(id) {
+  const authDate = String(Math.floor(Date.now() / 1_000));
+  const user = JSON.stringify({ id: Number(id), first_name: 'Telegram fixture' });
+  const secret = createHmac('sha256', 'WebAppData').update(process.env.TELEGRAM_BOT_TOKEN).digest();
+  const hash = createHmac('sha256', secret).update(`auth_date=${authDate}\nuser=${user}`).digest('hex');
+  return new URLSearchParams({ auth_date: authDate, user, hash }).toString();
+}
+
+function device(name, platform) {
+  return { deviceId: randomUUID(), deviceKey: randomBytes(32).toString('base64url'), name, platform };
+}
+
+function readSessionEvent(stream) {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  return async (matches) => {
+    while (true) {
+      const end = buffer.indexOf('\n\n');
+      if (end !== -1) {
+        const frame = buffer.slice(0, end);
+        buffer = buffer.slice(end + 2);
+        const data = frame.split('\n').find((line) => line.startsWith('data: '));
+        if (data) {
+          const snapshot = JSON.parse(data.slice(6));
+          if (matches(snapshot)) return snapshot;
+        }
+      } else {
+        const { done, value } = await reader.read();
+        assert.equal(done, false, 'The event stream closed before the expected state arrived');
+        buffer += decoder.decode(value, { stream: true });
+      }
+    }
+  };
+}
+</file>
+
+<file path="test/telegramLink.integration.test.js">
+const assert = require('node:assert/strict');
+const { createHash, randomInt, randomUUID } = require('node:crypto');
+const { test } = require('node:test');
+const bcrypt = require('bcrypt');
+
+const database = process.env.TEST_DATABASE_URL;
+
+test('Telegram link codes expire, are single-use, and unlink revokes old Telegram tokens', {
+  skip: !database && 'Set TEST_DATABASE_URL to a migrated disposable PostgreSQL database',
+  timeout: 20_000,
+}, async (t) => {
+  process.env.DATABASE_URL = database;
+  process.env.DIRECT_URL = database;
+  process.env.JWT_SECRET = 'telegram-link-integration-fixture';
+  process.env.SUPABASE_URL = 'https://storage.example.test';
+  process.env.SUPABASE_SERVICE_KEY = 'test-fixture';
+
+  const prisma = require('../lib/prisma');
+  const { readAuthenticatedUser } = require('../middlewares/auth');
+  const { issueToken } = require('../services/tokens');
+  const { createTelegramLinkCode, previewTelegramLink, confirmTelegramLink, unlinkTelegram } = require('../services/telegramLink');
+
+  const username = `link-fixture-${randomUUID()}`;
+  const password = 'link-fixture-password';
+  const passwordHash = await bcrypt.hash(password, 4);
+  const id = String(randomInt(3_000_000_000, 4_000_000_000));
+  const identity = { telegramId: id, telegramName: 'Fixture', telegramUsername: null, telegramPhotoUrl: null };
+  const ids = [];
+  t.after(async () => {
+    try {
+      await prisma.user.deleteMany({ where: { id: { in: ids } } });
+    } finally {
+      await prisma.$disconnect();
+    }
+  });
+
+  const browser = await prisma.user.create({ data: { username, password: passwordHash } });
+  ids.push(browser.id);
+  const browserToken = issueToken(browser);
+  await assert.rejects(createTelegramLinkCode(browser.id, 'wrong'), { status: 400 });
+
+  const previous = await createTelegramLinkCode(browser.id, password);
+  const expiring = await createTelegramLinkCode(browser.id, password);
+  await assert.rejects(previewTelegramLink(previous.code, id), { status: 404 });
+  const row = await prisma.telegramLinkCode.findUnique({ where: { userId: browser.id } });
+  assert.equal(row.codeHash, createHash('sha256').update(expiring.code).digest('hex'));
+  assert.notEqual(row.codeHash, expiring.code);
+  await prisma.telegramLinkCode.update({ where: { userId: browser.id }, data: { expiresAt: new Date(0) } });
+  await assert.rejects(confirmTelegramLink(expiring.code, identity, true), { status: 404 });
+
+  const duplicate = await prisma.user.create({ data: { ...identity, username: `${username}-duplicate`, password: passwordHash } });
+  ids.push(duplicate.id);
+  const invite = await createTelegramLinkCode(browser.id, password);
+  await assert.rejects(previewTelegramLink(invite.code, id), { status: 409 });
+  await assert.rejects(confirmTelegramLink(invite.code, identity, true), { status: 409 });
+  assert.equal((await prisma.user.findUnique({ where: { id: duplicate.id } })).telegramId, id);
+
+  await prisma.user.update({ where: { id: duplicate.id }, data: { password: null, isAdmin: true } });
+  await assert.rejects(confirmTelegramLink(invite.code, identity, true), { status: 409 });
+  await prisma.user.update({ where: { id: duplicate.id }, data: { isAdmin: false } });
+  assert.deepEqual(await previewTelegramLink(invite.code, id), { username, mergeRequired: true });
+  await assert.rejects(confirmTelegramLink(invite.code, identity, false), { status: 409 });
+
+  const linked = await confirmTelegramLink(invite.code, identity, true);
+  assert.equal(linked.id, browser.id);
+  assert.equal(await prisma.user.findUnique({ where: { id: duplicate.id } }), null);
+  const linkedToken = issueToken(linked);
+  assert.deepEqual(await readAuthenticatedUser(`Bearer ${linkedToken}`), { userId: browser.id });
+  await assert.rejects(confirmTelegramLink(invite.code, identity, true), { status: 404 });
+
+  await assert.rejects(unlinkTelegram(browser.id, 'wrong'), { status: 400 });
+  await unlinkTelegram(browser.id, password);
+  assert.equal(await readAuthenticatedUser(`Bearer ${linkedToken}`), null);
+  assert.deepEqual(await readAuthenticatedUser(`Bearer ${browserToken}`), { userId: browser.id });
+  const fresh = await createTelegramLinkCode(browser.id, password);
+  const relinked = await confirmTelegramLink(fresh.code, identity, false);
+  assert.equal(await readAuthenticatedUser(`Bearer ${linkedToken}`), null);
+  assert.deepEqual(await readAuthenticatedUser(`Bearer ${issueToken(relinked)}`), { userId: browser.id });
+});
+</file>
+
+<file path=".env.example">
+PORT=4000
+DATABASE_URL=
+DIRECT_URL=
+JWT_SECRET=
+SUPABASE_URL=
+SUPABASE_SERVICE_KEY=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_UPLOAD_USER_IDS=
+CORS_ORIGINS=
+TRUST_PROXY_HOPS=
+</file>
+
+<file path=".gitignore">
+node_modules
+# Keep environment variables out of version control
+.env
+</file>
+
+<file path="change.sql">
+ALTER TABLE "User"
+ALTER COLUMN "telegramId" DROP NOT NULL;
+</file>
+
+<file path="services/telegramInitData.js">
+const { createHmac, timingSafeEqual } = require('node:crypto');
+
+const MAX_AGE_SECONDS = 24 * 60 * 60;
+const CLOCK_SKEW_SECONDS = 60;
+const MAX_INIT_DATA_LENGTH = 16_384;
+
+// https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+function readTelegramUser(initData, botToken, now = Math.floor(Date.now() / 1000), maxAgeSeconds = MAX_AGE_SECONDS) {
+  if (typeof initData !== 'string' || initData.length === 0 || initData.length > MAX_INIT_DATA_LENGTH) {
+    return null;
+  }
+  const params = new URLSearchParams(initData);
+  const fields = new Map();
+  for (const [key, value] of params) {
+    if (fields.has(key) || !/^[A-Za-z0-9_]+$/.test(key) || /[\r\n]/.test(value)) return null;
+    fields.set(key, value);
+  }
+
+  const hash = fields.get('hash');
+  const authDate = fields.get('auth_date');
+  if (!hash || !/^[a-f0-9]{64}$/i.test(hash) || !authDate || !/^\d+$/.test(authDate)) return null;
+  const timestamp = Number(authDate);
+  if (!Number.isSafeInteger(timestamp) || timestamp <= 0 || now - timestamp > maxAgeSeconds ||
+      timestamp - now > CLOCK_SKEW_SECONDS) return null;
+
+  fields.delete('hash');
+  const checkString = [...fields.keys()].sort().map((key) => `${key}=${fields.get(key)}`).join('\n');
+  const secret = createHmac('sha256', 'WebAppData').update(botToken).digest();
+  const expected = createHmac('sha256', secret).update(checkString).digest();
+  if (!timingSafeEqual(expected, Buffer.from(hash, 'hex'))) return null;
+
+  try {
+    const user = JSON.parse(fields.get('user'));
+    if (!user || !Number.isSafeInteger(user.id) || user.id <= 0 || typeof user.first_name !== 'string') {
+      return null;
+    }
+    if (['last_name', 'username', 'photo_url'].some((field) => user[field] != null && typeof user[field] !== 'string')) {
+      return null;
+    }
+    return user;
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { readTelegramUser };
+</file>
+
+<file path="services/tokens.js">
+const jwt = require('jsonwebtoken');
+
+function issueToken(user) {
+  const claims = { userId: user.id, isAdmin: user.isAdmin };
+  if (user.telegramId) {
+    claims.telegramId = user.telegramId;
+    claims.telegramAuthVersion = user.telegramAuthVersion ?? 0;
+  }
+  return jwt.sign(claims, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
+}
+
+function verifyToken(token) {
+  const claims = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+  if (!Number.isInteger(claims?.userId) || claims.userId <= 0 || claims.userId > 2147483647 ||
+      !Number.isFinite(claims.exp)) {
+    throw new Error('Invalid token claims');
+  }
+  if (claims.telegramId !== undefined && (typeof claims.telegramId !== 'string' || !/^\d+$/.test(claims.telegramId))) {
+    throw new Error('Invalid Telegram token claims');
+  }
+  return claims;
+}
+
+module.exports = { issueToken, verifyToken };
+</file>
+
+<file path="services/userAccounts.js">
+const { randomUUID } = require('node:crypto');
+const prisma = require('../lib/prisma');
+const supabase = require('../lib/supabase');
+
+function imageBucket() {
+  return supabase.storage.from('images');
+}
+
+function managedAvatar(bucket, avatarUrl) {
+  if (!avatarUrl) return null;
+  try {
+    const root = new URL(bucket.getPublicUrl('avatars/').data.publicUrl);
+    const url = new URL(avatarUrl);
+    if (url.origin !== root.origin || !url.pathname.startsWith(root.pathname)) return null;
+    const filename = url.pathname.slice(root.pathname.length);
+    const match = /^([1-9]\d*)_(?:\d+|[a-f0-9-]{36})\.(?:jpg|png|webp|gif)$/.exec(filename);
+    const owner = Number(match?.[1]);
+    return Number.isInteger(owner) && owner <= 2147483647 ? { owner, path: `avatars/${filename}` } : null;
+  } catch {
+    return null;
+  }
+}
+
+async function removeImage(bucket, path) {
+  if (!path) return;
+  try {
+    const { error } = await bucket.remove([path]);
+    if (error) console.warn('Avatar storage cleanup failed');
+  } catch {
+    console.warn('Avatar storage cleanup failed');
+  }
+}
+
+async function cleanupUserAvatar(id, profileImageUrl) {
+  if (!profileImageUrl) return;
+  const bucket = imageBucket();
+  const avatar = managedAvatar(bucket, profileImageUrl);
+  if (!avatar) return;
+  if (avatar.owner !== id) {
+    // Merged profiles may retain an avatar from a deleted Telegram-only account.
+    try {
+      const existing = await prisma.user.findFirst({
+        where: { OR: [{ id: avatar.owner }, { profileImageUrl }] },
+        select: { id: true },
+      });
+      if (existing) return;
+    } catch {
+      console.warn('Transferred avatar ownership could not be confirmed');
+      return;
+    }
+  }
+  await removeImage(bucket, avatar.path);
+}
+
+async function deleteUserAccount(id) {
+  let user;
+  try {
+    user = await prisma.$transaction(async (tx) => {
+      await tx.favorite.deleteMany({ where: { userId: id } });
+      await tx.review.deleteMany({ where: { userId: id } });
+      await tx.complaint.deleteMany({ where: { userId: id } });
+      return tx.user.delete({ where: { id }, select: { profileImageUrl: true } });
+    });
+  } catch (error) {
+    if (error.code === 'P2025') return false;
+    throw error;
+  }
+  await cleanupUserAvatar(id, user.profileImageUrl);
+  return true;
+}
+
+async function updateUserAvatar(id, buffer, { extension, contentType }) {
+  const where = { id };
+  const select = { profileImageUrl: true };
+  const current = await prisma.user.findUnique({ where, select });
+  if (!current) return { status: 'missing' };
+
+  const bucket = imageBucket();
+  const path = `avatars/${id}_${randomUUID()}${extension}`;
+  const profileImageUrl = bucket.getPublicUrl(path).data.publicUrl;
+  const { error } = await bucket.upload(path, buffer, { contentType, upsert: false });
+  if (error) throw new Error('Avatar storage upload failed');
+
+  let updated;
+  try {
+    const { count } = await prisma.user.updateMany({
+      where: { id, profileImageUrl: current.profileImageUrl },
+      data: { profileImageUrl },
+    });
+    updated = count === 1;
+  } catch (updateError) {
+    // A database timeout can arrive after the change committed. Confirm before deleting the new file.
+    const saved = await prisma.user.findUnique({ where, select }).catch(() => undefined);
+    if (saved === undefined) throw updateError;
+    if (saved?.profileImageUrl !== profileImageUrl) {
+      await removeImage(bucket, path);
+      throw updateError;
+    }
+    updated = true;
+  }
+
+  if (!updated) {
+    await removeImage(bucket, path);
+    return { status: 'conflict' };
+  }
+
+  await cleanupUserAvatar(id, current.profileImageUrl);
+  return { status: 'saved', profileImageUrl };
+}
+
+module.exports = { cleanupUserAvatar, deleteUserAccount, updateUserAvatar };
+</file>
+
+<file path="test/api.test.js">
+const assert = require('node:assert/strict');
+const { createHmac } = require('node:crypto');
+const { readFile } = require('node:fs/promises');
+const { once } = require('node:events');
+const path = require('node:path');
+const { after, before, test } = require('node:test');
+const jwt = require('jsonwebtoken');
+
+process.env.JWT_SECRET = 'api-test-signing-key-not-for-deployment';
+process.env.TELEGRAM_BOT_TOKEN = '12345:fixture-only';
+process.env.SUPABASE_URL = 'https://storage.example.test';
+process.env.SUPABASE_SERVICE_KEY = 'fixture-service-key';
+process.env.CORS_ORIGINS = '';
+process.env.TRUST_PROXY_HOPS = '';
+
+const prisma = require('../lib/prisma');
+const { createApp } = require('../app');
+const { issueToken } = require('../services/tokens');
+
+const legacyFile = '1740390046835-6531966.mp3';
+const storedFile = 'https://storage.example.test/storage/v1/object/public/tracks/test.mp3';
+const track = {
+  id: 1, title: 'Sample', artist: 'Artist', album: 'Album', duration: 90,
+  imageUrl: null, filename: legacyFile,
+};
+const user = { id: 7, username: 'listener', isAdmin: false, profileImageUrl: null };
+const memberToken = issueToken(user);
+let favorite;
+let telegramUser;
+let server;
+let base;
+
+before(async () => {
+  // Real Express routes and middleware, with fixture data in place of external services.
+  prisma.user.findUnique = async ({ where, select }) => {
+    const result = where.id === user.id ? user : telegramUser?.id === where.id ? telegramUser : null;
+    if (!result || !select) return result;
+    return Object.fromEntries(Object.keys(select).map((key) => [key, result[key]]));
+  };
+  prisma.user.upsert = async ({ where, create }) => {
+    assert.equal(where.telegramId, '555');
+    telegramUser = { ...create, id: 8, isAdmin: false };
+    return telegramUser;
+  };
+  prisma.track.findUnique = async ({ where }) => {
+    if (where.id === 1) return track;
+    if (where.id === 2) return { ...track, id: 2, filename: storedFile };
+    return null;
+  };
+  prisma.track.findMany = async ({ where } = {}) => {
+    if (where) {
+      assert.deepEqual(where.OR.map((rule) => Object.keys(rule)[0]), ['title', 'artist', 'album']);
+    }
+    return [track];
+  };
+  prisma.favorite.create = async ({ data }) => {
+    assert.equal(data.userId, user.id);
+    if (favorite) throw Object.assign(new Error('Already exists'), { code: 'P2002' });
+    favorite = { favoriteId: 45, ...data };
+    return favorite;
+  };
+  prisma.favorite.findUnique = async () => favorite;
+  prisma.favorite.findMany = async ({ where }) => {
+    assert.equal(where.userId, user.id);
+    return favorite ? [{ favoriteId: favorite.favoriteId, trackId: favorite.trackId, track }] : [];
+  };
+  prisma.favorite.deleteMany = async ({ where }) => {
+    assert.equal(where.userId, user.id);
+    favorite = undefined;
+    return { count: 1 };
+  };
+
+  server = createApp({ logRequests: false }).listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  base = `http://127.0.0.1:${server.address().port}`;
+});
+
+after(async () => {
+  if (server?.listening) await new Promise((resolve, reject) => server.close((err) => err ? reject(err) : resolve()));
+  await prisma.$disconnect();
+});
+
+function call(route, { token, payload, method, headers, redirect } = {}) {
+  return fetch(base + route, {
+    method: method ?? (payload === undefined ? 'GET' : 'POST'),
+    headers: {
+      ...(payload === undefined ? {} : { 'Content-Type': 'application/json' }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+    body: payload === undefined ? undefined : JSON.stringify(payload),
+    redirect,
+  });
+}
+
+test('catalog and album search are accessible as a guest', async () => {
+  for (const route of ['/tracks', '/tracks/search?query=Album']) {
+    const response = await call(route);
+    assert.equal(response.status, 200);
+    assert.equal((await response.json())[0].title, 'Sample');
+  }
+  assert.equal((await call('/tracks/search')).status, 400);
+});
+
+test('profile accepts a current bearer token and rejects missing or expired sessions', async () => {
+  const expired = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: -1 });
+  for (const token of [undefined, expired]) {
+    const response = await call('/users/profile', { token });
+    assert.equal(response.status, 401);
+    assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+  }
+  const response = await call('/users/profile', { token: memberToken });
+  assert.equal(response.status, 200);
+  const profile = await response.json();
+  assert.equal(profile.displayName, user.username);
+  assert.ok(!Object.hasOwn(profile, 'password'));
+});
+
+test('Telegram accepts signed current data and rejects an expired launch', async () => {
+  function initData(authDate) {
+    const fields = {
+      auth_date: String(authDate),
+      user: JSON.stringify({ id: 555, first_name: 'Telegram', last_name: 'Listener' }),
+    };
+    const entries = Object.entries(fields).sort(([left], [right]) => left.localeCompare(right));
+    const checkString = entries.map(([key, value]) => `${key}=${value}`).join('\n');
+    const secret = createHmac('sha256', 'WebAppData').update(process.env.TELEGRAM_BOT_TOKEN).digest();
+    const hash = createHmac('sha256', secret).update(checkString).digest('hex');
+    return new URLSearchParams({ ...fields, hash }).toString();
+  }
+  const now = Math.floor(Date.now() / 1000);
+  assert.equal((await call('/auth/telegram', { payload: { initData: initData(now - 86_401) } })).status, 401);
+  const response = await call('/auth/telegram', { payload: { initData: initData(now) } });
+  assert.equal(response.status, 200);
+  const { token, user: profile } = await response.json();
+  assert.equal(profile.telegramId, '555');
+  assert.equal(profile.displayName, 'Telegram Listener');
+  assert.equal((await call('/users/profile', { token })).status, 200);
+});
+
+test('admin and track mutations require the current admin role', async () => {
+  const oldAdminToken = issueToken({ ...user, isAdmin: true });
+  for (const attempt of [
+    { route: '/api/admin/dashboard' },
+    { route: '/tracks/add-track', method: 'POST' },
+    { route: '/tracks/upload-multiple', method: 'POST' },
+    { route: '/tracks/delete/1', method: 'DELETE' },
+  ]) {
+    const { route, method } = attempt;
+    assert.equal((await call(route, { method })).status, 401);
+    assert.equal((await call(route, { method, token: oldAdminToken })).status, 403);
+  }
+});
+
+test('favorites are scoped to a user and repeated changes are safe', async () => {
+  assert.equal((await call('/favorites/get')).status, 401);
+  const payload = { trackId: 1 };
+  const session = { token: memberToken };
+  assert.equal((await call('/favorites/add', { ...session, payload: { trackId: 'a' } })).status, 400);
+  assert.equal((await call('/favorites/add', { ...session, payload })).status, 201);
+  assert.equal((await call('/favorites/add', { ...session, payload })).status, 200);
+  const result = await (await call('/favorites/get', session)).json();
+  assert.equal(result.favorites[0].trackId, 1);
+  assert.equal(result.favorites[0].album, 'Album');
+  assert.equal((await call('/favorites/remove', { ...session, payload })).status, 200);
+  assert.equal((await call('/favorites/remove', { ...session, payload })).status, 200);
+  assert.deepEqual(await (await call('/favorites/get', session)).json(), { favorites: [] });
+});
+
+test('the legacy stream serves bytes and the storage stream redirects to the CDN', async () => {
+  const response = await call('/tracks/1/stream', { headers: { Range: 'bytes=0-31' } });
+  assert.equal(response.status, 206);
+  assert.match(response.headers.get('content-range'), /^bytes 0-31\/\d+$/);
+  const file = await readFile(path.join(__dirname, '..', 'public', 'tracks', legacyFile));
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()), file.subarray(0, 32));
+
+  const head = await call('/tracks/1/stream', { method: 'HEAD' });
+  assert.equal(head.status, 200);
+  assert.equal(Number(head.headers.get('content-length')), file.length);
+  const remote = await call('/tracks/2/stream', { redirect: 'manual' });
+  assert.equal(remote.status, 302);
+  assert.equal(remote.headers.get('location'), storedFile);
+  assert.equal((await call('/tracks/3/stream')).status, 404);
+});
+
+test('catalog and playback CORS allow the canonical site and redirect alias only', async () => {
+  const allowed = ['https://muisicunderlab.vercel.app', 'https://underlab-phi.vercel.app'];
+  for (const origin of [...allowed, 'https://unrelated.vercel.app']) {
+    const [catalog, playback] = await Promise.all([
+      call('/tracks', { headers: { Origin: origin } }),
+      call('/playback/devices', {
+        method: 'OPTIONS',
+        headers: {
+          Origin: origin,
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'authorization,content-type',
+        },
+      }),
+    ]);
+    assert.equal(catalog.status, 200);
+    const expectedOrigin = allowed.includes(origin) ? origin : null;
+    assert.equal(catalog.headers.get('access-control-allow-origin'), expectedOrigin);
+    assert.equal(playback.headers.get('access-control-allow-origin'), expectedOrigin);
+    if (expectedOrigin) {
+      assert.equal(playback.status, 204);
+      assert.match(playback.headers.get('access-control-allow-headers'), /\bAuthorization\b/i);
+    }
+  }
+});
+</file>
+
+<file path="README.md">
+# music-streaming-server
+
+Express API for the website and Telegram Mini App. PostgreSQL stores users, tracks and favorites. Supabase Storage serves uploaded audio, cover art and avatars.
+
+## Run locally
+
+Use Node.js 22 or newer. Copy `.env.example` to `.env` and fill in the database URLs, a private JWT signing secret and Supabase server credentials. Use a development database for local migration runs.
+
+```powershell
+npm ci
+npx prisma generate
+npx prisma migrate deploy
+npm start
+```
+
+- `DATABASE_URL` is the application connection. `DIRECT_URL` is the direct PostgreSQL connection used for migrations.
+- `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` are required on the backend. Existing `tracks` and `images` buckets need public reads for playback and cover art. Storage writes use the server key.
+- `TELEGRAM_BOT_TOKEN` enables Telegram login and bot polling. Music upload is available in private chat to Telegram-linked administrators or Telegram IDs in the comma-separated `TELEGRAM_UPLOAD_USER_IDS` list.
+- `CORS_ORIGINS` adds exact frontend origins as a comma-separated list. The production UNDERLAB origin and the default local Vite origins are already allowed.
+- Set `TRUST_PROXY_HOPS` only when the number of trusted reverse-proxy hops is known. The credential attempt limiter uses the client IP resolved by Express.
+
+## Catalog and audio
+
+Apply the Prisma migration before enabling Realtime in the frontend. On Supabase it publishes the public track catalog and keeps account, favorite, complaint and review tables behind the API. It also adds four foreign-key indexes.
+
+`GET /tracks/:id/stream` serves bundled legacy tracks with HTTP Range and redirects new tracks to Supabase Storage. The bot and administrator upload routes share file validation and metadata extraction.
+
+Run `npm test` for the HTTP API checks. They start an ephemeral loopback server with database fixtures.
+
+## Shared playback
+
+To connect an existing site login to Telegram, create a one-time code from the profile on the site and confirm it in the Mini App. The code expires after five minutes. Linking can merge a separate Telegram-only account with explicit consent. The website account keeps its ID. Favorites are deduplicated and reviews and complaints are moved. Unlinking requires the website password.
+
+The `/playback` API stores a versioned session per user and treats each open page as a playback device. The authenticated event stream sends updates to that user's devices. Devices can control the queue from any connected page. One device holds the audio lease at a time. Handoff pauses the outgoing device before granting the new lease and falls back to expiry when the outgoing device loses its connection.
+
+Apply both Prisma migrations before serving this version. The account-link, playback-session and device tables restrict direct reads from browser roles. The existing catalog uses Supabase Realtime. Playback events use authenticated HTTP streaming through Express. Keep response buffering disabled on any proxy in front of `/playback/events`.
+
+Set `TEST_DATABASE_URL` to a migrated disposable PostgreSQL database before running `npm test` to include the linked-account and two-device integration test.
+</file>
+
+<file path="controllers/adminController.js">
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
+const { deleteUserAccount } = require('../services/userAccounts');
+const { TrackError, updateTrack, deleteTrack } = require('../services/tracks');
+
+exports.getDashboardData = async (req, res) => {
+  try {
+    const [users, tracks, complaints, reviews] = await Promise.all([
+      prisma.user.count(),
+      prisma.track.count(),
+      prisma.complaint.count(),
+      prisma.review.count(),
+    ]);
+    return res.json({ users, tracks, complaints, reviews });
+  } catch (error) {
+    console.error('Ошибка получения данных панели администратора:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка получения данных панели администратора' });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        profileImageUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        isAdmin: true,
+      },
+    });
+    return res.json(users);
+  } catch (error) {
+    console.error('Ошибка получения пользователей:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка получения пользователей' });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  const id = positiveInt(req.params.id);
+  if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор пользователя' });
+
+  try {
+    if (!await deleteUserAccount(id)) return res.status(404).json({ error: 'Пользователь не найден' });
+    return res.json({ message: 'Пользователь удален' });
+  } catch (error) {
+    console.error('Ошибка удаления пользователя:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка удаления пользователя' });
+  }
+};
+
+exports.editTrack = async (req, res) => {
+  const id = positiveInt(req.params.id);
+  if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор трека' });
+
+  try {
+    const track = await updateTrack(id, req.body);
+    return res.json({ message: 'Трек обновлен', track });
+  } catch (error) {
+    if (error instanceof TrackError) return res.status(error.status).json({ error: error.message });
+    console.error('Ошибка обновления трека:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка обновления трека' });
+  }
+};
+
+exports.deleteTrack = async (req, res) => {
+  const id = positiveInt(req.params.id);
+  if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор трека' });
+
+  try {
+    await deleteTrack(id);
+    return res.json({ message: 'Трек удален' });
+  } catch (error) {
+    if (error instanceof TrackError) return res.status(error.status).json({ error: error.message });
+    console.error('Ошибка удаления трека:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка удаления трека' });
+  }
+};
+</file>
+
+<file path="controllers/complaintController.js">
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
+
+const complaintStatuses = new Set(['pending', 'resolved', 'rejected']);
+
+exports.createComplaint = async (req, res) => {
+  const { message } = req.body ?? {};
+  if (typeof message !== 'string' || !message.trim()) {
+    return res.status(400).json({ error: 'Сообщение обязательно для заполнения' });
+  }
+
+  try {
+    const complaint = await prisma.complaint.create({
+      data: { userId: req.user.userId, message: message.trim() },
+    });
+    return res.status(201).json({ message: 'Жалоба успешно создана', complaint });
+  } catch (error) {
+    if (error.code === 'P2003') return res.status(404).json({ error: 'Пользователь не найден' });
+    console.error('Ошибка создания жалобы:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка создания жалобы' });
+  }
+};
+
+exports.getAllComplaints = async (req, res) => {
+  try {
+    const complaints = await prisma.complaint.findMany({
+      include: { user: { select: { username: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    return res.json(complaints);
+  } catch (error) {
+    console.error('Ошибка получения жалоб:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка получения жалоб' });
+  }
+};
+
+function updateComplaint(formatResponse) {
+  return async (req, res) => {
+    const id = positiveInt(req.params.id);
+    const { status } = req.body ?? {};
+    if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор жалобы' });
+    if (!complaintStatuses.has(status)) return res.status(400).json({ error: 'Недопустимый статус жалобы' });
+
+    try {
+      const complaint = await prisma.complaint.update({ where: { id }, data: { status } });
+      return res.json(formatResponse(complaint));
+    } catch (error) {
+      if (error.code === 'P2025') return res.status(404).json({ error: 'Жалоба не найдена' });
+      console.error('Ошибка обновления жалобы:', error.code ?? error.name);
+      return res.status(500).json({ error: 'Ошибка обновления жалобы' });
+    }
+  };
+}
+
+exports.updateComplaint = updateComplaint((updatedComplaint) => ({
+  message: 'Статус жалобы обновлен',
+  updatedComplaint,
+}));
+exports.updateAdminComplaint = updateComplaint((complaint) => ({
+  message: 'Жалоба обновлена',
+  complaint,
+}));
+</file>
+
+<file path="middlewares/auth.js">
+const prisma = require('../lib/prisma');
+const { verifyToken } = require('../services/tokens');
+
+function unauthorized(res) {
+  return res.set('WWW-Authenticate', 'Bearer').status(401).json({ error: 'Authentication required' });
+}
+
+async function readAuthenticatedUser(authorizationHeader) {
+  const match = /^Bearer\s+(\S+)$/i.exec(authorizationHeader ?? '');
+  if (!match) return null;
+  let claims;
+  try {
+    claims = verifyToken(match[1]);
+  } catch {
+    return null;
+  }
+  if (claims.telegramId) {
+    const current = await prisma.user.findUnique({
+      where: { id: claims.userId },
+      select: { telegramId: true, telegramAuthVersion: true },
+    });
+    if (!current || current.telegramId !== claims.telegramId ||
+        (current.telegramAuthVersion ?? 0) !== (claims.telegramAuthVersion ?? 0)) {
+      return null;
+    }
+  }
+  return { userId: claims.userId };
+}
+
+async function authenticateToken(req, res, next) {
+  try {
+    const user = await readAuthenticatedUser(req.headers.authorization);
+    if (!user) return unauthorized(res);
+    req.user = user;
+  } catch (error) {
+    return next(error);
+  }
+  next();
+}
+
+async function requireAdmin(req, res, next) {
+  if (!req.user) return unauthorized(res);
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { isAdmin: true },
+    });
+    if (!user) return unauthorized(res);
+    if (!user.isAdmin) return res.status(403).json({ error: 'Forbidden' });
+    req.user.isAdmin = true;
+  } catch (error) {
+    return next(error);
+  }
+  next();
+}
+
+module.exports = { authenticateToken, readAuthenticatedUser, requireAdmin };
+</file>
+
+<file path="routes/authRoutes.js">
+const express = require('express');
+const authController = require('../controllers/authController');
+const { authenticateToken } = require('../middlewares/auth');
+const { limitCredentialAttempts } = require('../middlewares/authRateLimit');
+
+const router = express.Router();
+router.post('/telegram', limitCredentialAttempts, authController.telegramAuth);
+router.post('/telegram/link-code', authenticateToken, limitCredentialAttempts, authController.createLinkCode);
+router.post('/telegram/link/preview', limitCredentialAttempts, authController.previewLink);
+router.post('/telegram/link', limitCredentialAttempts, authController.confirmLink);
+router.delete('/telegram/link', authenticateToken, limitCredentialAttempts, authController.unlinkTelegram);
+
+module.exports = router;
+</file>
+
+<file path="controllers/authController.js">
+const prisma = require('../lib/prisma');
+const { telegramIdentity } = require('../services/telegramIdentity');
+const { readTelegramUser } = require('../services/telegramInitData');
+const {
+  TelegramLinkError, createTelegramLinkCode, previewTelegramLink, confirmTelegramLink, unlinkTelegram,
+} = require('../services/telegramLink');
+const { issueToken } = require('../services/tokens');
+
+const LINK_INIT_DATA_MAX_AGE = 5 * 60;
+
+exports.telegramAuth = async (req, res, next) => {
+  const { initData } = req.body ?? {};
+  if (typeof initData !== 'string' || !initData) {
+    return res.status(400).json({ error: 'initData required' });
+  }
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) return res.status(503).json({ error: 'Telegram login unavailable' });
+
+  const telegramUser = readTelegramUser(initData, botToken);
+  if (!telegramUser) return res.status(401).json({ error: 'Invalid or expired Telegram session' });
+
+  const { telegramId, ...details } = telegramIdentity(telegramUser);
+
+  try {
+    const user = await prisma.user.upsert({
+      where: { telegramId },
+      create: { telegramId, ...details },
+      update: details,
+      select: {
+        id: true, isAdmin: true, telegramId: true, telegramAuthVersion: true,
+        telegramName: true, profileImageUrl: true, telegramPhotoUrl: true,
+      },
+    });
+    return res.set('Cache-Control', 'no-store').json({
+      token: issueToken(user),
+      user: {
+        id: user.id,
+        displayName: user.telegramName,
+        profileImageUrl: user.profileImageUrl ?? user.telegramPhotoUrl ?? null,
+        telegramId: user.telegramId,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+function linkIdentity(initData) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) throw new TelegramLinkError(503, 'Telegram login unavailable');
+  const user = readTelegramUser(initData, botToken, undefined, LINK_INIT_DATA_MAX_AGE);
+  if (!user) throw new TelegramLinkError(401, 'Reopen the Mini App to confirm Telegram again');
+  return telegramIdentity(user);
+}
+
+function linkHandler(action) {
+  return async (req, res, next) => {
+    try {
+      const data = await action(req, req.body ?? {});
+      return res.set('Cache-Control', 'no-store').json(data);
+    } catch (error) {
+      if (error instanceof TelegramLinkError) return res.status(error.status).json({ error: error.message });
+      return next(error);
+    }
+  };
+}
+
+exports.createLinkCode = linkHandler((req, { password }) => createTelegramLinkCode(req.user.userId, password));
+exports.previewLink = linkHandler((req, { code, initData }) =>
+  previewTelegramLink(code, linkIdentity(initData).telegramId));
+exports.confirmLink = linkHandler(async (req, { code, initData, confirmMerge }) => {
+  const user = await confirmTelegramLink(code, linkIdentity(initData), confirmMerge === true);
+  return { token: issueToken(user) };
+});
+exports.unlinkTelegram = linkHandler(async (req, { password }) => {
+  const user = await unlinkTelegram(req.user.userId, password);
+  return { token: issueToken(user) };
+});
+</file>
+
+<file path="prisma/migrations/migration_lock.toml">
+# Please do not edit this file manually
+# It should be added in your version-control system (e.g., Git)
+provider = "postgresql"
+</file>
+
+<file path="routes/adminRoutes.js">
+const express = require('express');
+const admin = require('../controllers/adminController');
+const complaints = require('../controllers/complaintController');
+const reviews = require('../controllers/reviewController');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
+
+const router = express.Router();
+router.use(authenticateToken, requireAdmin);
+
+router.get('/dashboard', admin.getDashboardData);
+router.get('/users', admin.getAllUsers);
+router.delete('/users/:id', admin.deleteUser);
+router.get('/complaints', complaints.getAllComplaints);
+router.put('/complaints/:id', complaints.updateAdminComplaint);
+router.get('/reviews', reviews.getAdminReviews);
+router.delete('/reviews/:id', reviews.deleteReview);
+router.put('/tracks/:id', admin.editTrack);
+router.delete('/tracks/:id', admin.deleteTrack);
+
+module.exports = router;
+</file>
+
+<file path="routes/complaintRoutes.js">
+const express = require('express');
+const complaintController = require('../controllers/complaintController');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
+
+const router = express.Router();
+router.use(authenticateToken);
+router.post('/create', complaintController.createComplaint);
+router.get('/all', requireAdmin, complaintController.getAllComplaints);
+router.put('/update/:id', requireAdmin, complaintController.updateComplaint);
+
+module.exports = router;
+</file>
+
+<file path="middlewares/upload.js">
+const { mkdtemp, rm } = require('node:fs/promises');
+const { tmpdir } = require('node:os');
+const path = require('node:path');
+const multer = require('multer');
+const { AUDIO_LIMIT, BATCH_LIMIT, IMAGE_LIMIT, MAX_TRACKS } = require('../services/tracks');
+
+const uploadRoot = path.resolve(tmpdir());
+const maxActiveUploads = 2;
+const maxRequestSize = BATCH_LIMIT + IMAGE_LIMIT + 1024 * 1024;
+let activeUploads = 0;
+
+exports.upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, callback) => callback(null, req.trackUploadDirectory),
+  }),
+  limits: {
+    fileSize: AUDIO_LIMIT,
+    files: MAX_TRACKS,
+    fields: 4,
+    fieldSize: 1024,
+    parts: MAX_TRACKS + 5,
+  },
+});
+
+function parseUpload(parser, req, res) {
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(new Error('Track upload was aborted'));
+    req.once('aborted', onAbort);
+    parser(req, res, error => {
+      req.removeListener('aborted', onAbort);
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+exports.withTrackUpload = (parser, handler) => async (req, res, next) => {
+  const requestSize = Number(req.get('content-length'));
+  if (requestSize > maxRequestSize) return res.status(413).json({ error: 'Upload exceeds the configured limit' });
+  if (activeUploads >= maxActiveUploads) {
+    return res.set('Retry-After', '5').status(503).json({ error: 'Track upload is busy. Try again shortly.' });
+  }
+
+  let directory;
+  activeUploads++;
+  try {
+    directory = await mkdtemp(path.join(uploadRoot, 'underlab-tracks-'));
+    if (req.aborted) return;
+    req.trackUploadDirectory = directory;
+    await parseUpload(parser, req, res);
+    if (!req.aborted) await handler(req, res);
+  } catch (error) {
+    if (!req.aborted) next(error);
+  } finally {
+    if (directory && path.dirname(directory) === uploadRoot) {
+      try {
+        await rm(directory, { recursive: true, force: true, maxRetries: 3 });
+      } catch (error) {
+        console.warn('Temporary track cleanup failed:', error.code);
+      }
+    }
+    activeUploads--;
+  }
+};
+
+exports.uploadAvatar = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: IMAGE_LIMIT, files: 1, fields: 0 },
+  fileFilter: (req, file, callback) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return callback(new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname));
+    }
+    callback(null, true);
+  },
+});
+</file>
+
+<file path="routes/favoriteRoutes.js">
+const express = require('express');
+const controller = require('../controllers/favoriteController');
+const { authenticateToken } = require('../middlewares/auth');
+
+const router = express.Router();
+const handle = (action) => (req, res, next) => action(req, res).catch(next);
+
+router.post('/add', authenticateToken, handle(controller.addFavorite));
+router.get('/get', authenticateToken, handle(controller.getFavorites));
+router.post('/remove', authenticateToken, handle(controller.removeFavorite));
+
+module.exports = router;
+</file>
+
+<file path="routes/reviewRoutes.js">
+const express = require('express');
+const reviewController = require('../controllers/reviewController');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
+
+const router = express.Router();
+router.use(authenticateToken);
+router.post('/create', reviewController.createReview);
+router.get('/all', requireAdmin, reviewController.getAllReviews);
+router.delete('/delete/:id', requireAdmin, reviewController.deleteReview);
+router.delete('/delete_user_review/:id', reviewController.deleteUserReview);
+router.get('/track/:trackId', reviewController.getReviewsForTrack);
+
+module.exports = router;
+</file>
+
+<file path="bot/bot.js">
+const { Bot } = require('node-telegram-bot-api');
+const prisma = require('../lib/prisma');
+const { IMAGE_LIMIT, TrackError, saveTracks } = require('../services/tracks');
+
+const TELEGRAM_AUDIO_LIMIT = 20 * 1024 * 1024;
+
+async function downloadFile(api, token, file, limit) {
+  if (file.file_size > limit) throw new TrackError(413, 'This file exceeds the Telegram download limit.');
+  const info = await api.getFile({ file_id: file.file_id });
+  if (info.file_size > limit) throw new TrackError(413, 'This file exceeds the Telegram download limit.');
+  const parts = info.file_path?.split('/');
+  if (!parts?.length || parts.some(part => !part || part === '.' || part === '..')) {
+    throw new Error('Telegram did not return a valid file path');
+  }
+  const filePath = parts.map(encodeURIComponent).join('/');
+  const response = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`, {
+    redirect: 'error',
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!response.ok || !response.body || Number(response.headers.get('content-length')) > limit) {
+    await response.body?.cancel();
+    throw new TrackError(400, 'Telegram could not provide a downloadable file within the limit.');
+  }
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of response.body) {
+    size += chunk.byteLength;
+    if (size > limit) throw new TrackError(413, 'This file exceeds the Telegram download limit.');
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks, size);
+}
+
+function launch() {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    console.log('Telegram bot disabled');
+    return;
+  }
+  const uploaders = new Set((process.env.TELEGRAM_UPLOAD_USER_IDS || '').split(',')
+    .map(value => value.trim()).filter(value => /^\d+$/.test(value)));
+  const bot = new Bot(token);
+  let busy = false;
+
+  bot.command('start', ctx => ctx.reply(
+    'Send an audio file in this private chat to add it to the music library. Upload access is required.\n\nMP3, FLAC, AAC, OGG, WAV, M4A',
+  ));
+
+  bot.on('message', async ctx => {
+    const message = ctx.message;
+    const media = message?.audio || message?.document;
+    if (!media || !ctx.from?.id || ctx.chat?.type !== 'private') return;
+    const telegramId = String(ctx.from.id);
+    if (!uploaders.has(telegramId)) {
+      const user = await prisma.user.findUnique({ where: { telegramId }, select: { isAdmin: true } });
+      if (!user?.isAdmin) {
+        await ctx.reply('This account cannot add tracks to the library.');
+        return;
+      }
+    }
+    if (busy) {
+      await ctx.reply('Another track is being uploaded. Try again shortly.');
+      return;
+    }
+
+    busy = true;
+    let result;
+    try {
+      const buffer = await downloadFile(ctx.api, token, media, TELEGRAM_AUDIO_LIMIT);
+      const thumbnail = media.thumbnail || media.thumb;
+      const [track] = await saveTracks([{
+        audio: { buffer, size: buffer.length, originalname: media.file_name || '' },
+        fallback: { title: media.title, artist: media.performer, duration: media.duration },
+        loadFallbackCover: thumbnail ? () => downloadFile(ctx.api, token, thumbnail, IMAGE_LIMIT).catch(() => null) : undefined,
+      }]);
+      const details = [track.title, track.artist, track.album, track.genre].filter(Boolean).join('\n');
+      result = `Track added\n\n${details}\n\nID: ${track.id}`;
+    } catch (error) {
+      console.error('Telegram track upload failed:', error.code || error.name);
+      result = error instanceof TrackError ? error.message : 'Could not save the track. Try again later.';
+    } finally {
+      busy = false;
+    }
+    await ctx.reply(result);
+  });
+
+  bot.catch(error => console.error('Telegram update failed:', error.name));
+  void bot.init().then(() => {
+    console.log('Telegram bot started');
+    return bot.startPolling(undefined, { allowedUpdates: ['message'] });
+  }).catch(error => console.error('Telegram polling failed:', error.name));
+  return bot;
+}
+
+module.exports = { launch };
+</file>
+
+<file path="routes/trackRoutes.js">
+const express = require('express');
+const trackController = require('../controllers/trackController');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
+const { upload, withTrackUpload } = require('../middlewares/upload');
+const { MAX_TRACKS } = require('../services/tracks');
+
+const router = express.Router();
+const adminOnly = [authenticateToken, requireAdmin];
+
+router.get('/', trackController.getTracks);
+router.get('/search', trackController.search);
+router.get('/:id/stream', trackController.streamTrack);
+
+router.post(
+  '/add-track',
+  adminOnly,
+  withTrackUpload(
+    upload.fields([{ name: 'image', maxCount: 1 }, { name: 'track', maxCount: 1 }]),
+    trackController.addTrack,
+  ),
+);
+router.post(
+  '/upload-multiple',
+  adminOnly,
+  withTrackUpload(upload.array('tracks', MAX_TRACKS), trackController.uploadMultipleTracks),
+);
+router.delete('/delete/:id', adminOnly, trackController.deleteTrack);
+router.put('/edit/:id', adminOnly, trackController.editTrack);
+
+module.exports = router;
+</file>
+
+<file path="package.json">
+{
+  "name": "music-streaming-server",
+  "version": "1.0.0",
+  "main": "app.js",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node app.js",
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "@supabase/supabase-js": "^2.106.2",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.22.3",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.5.0",
+    "music-metadata": "^12.7.0",
+    "node-telegram-bot-api": "^2.4.0"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "^8.0.0"
+    }
+  },
+  "devDependencies": {
+    "prisma": "^6.0.0"
+  }
+}
+</file>
+
+<file path="routes/userRoutes.js">
+const express = require('express');
+const userController = require('../controllers/userController');
+const { positiveInt } = require('../lib/validation');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
+const { limitCredentialAttempts } = require('../middlewares/authRateLimit');
+const { uploadAvatar } = require('../middlewares/upload');
+
+const router = express.Router();
+
+function requireSelfOrAdmin(req, res, next) {
+  const id = positiveInt(req.params.id);
+  if (!id) return res.status(400).json({ error: 'Invalid ID' });
+  res.locals.targetUserId = id;
+  return id === req.user.userId ? next() : requireAdmin(req, res, next);
+}
+
+router.post('/register', limitCredentialAttempts, userController.register);
+router.post('/login', limitCredentialAttempts, userController.login);
+router.post('/logout', userController.logout);
+router.put('/edit-pass', authenticateToken, limitCredentialAttempts, userController.edit_pass);
+router.put('/edit-username', authenticateToken, userController.edit_username);
+router.post('/uploadProfileImage', authenticateToken, uploadAvatar.single('profileImage'), userController.uploadProfileImage);
+router.get('/profile', authenticateToken, userController.getUserProfile);
+router.get('/all', authenticateToken, requireAdmin, userController.getAllUsers);
+router.delete('/delete/:id', authenticateToken, requireAdmin, userController.deleteUser);
+router.get('/users/:id', authenticateToken, requireSelfOrAdmin, userController.getUserById);
+
+module.exports = router;
+</file>
+
+<file path="controllers/favoriteController.js">
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
+
+exports.addFavorite = async (req, res) => {
+  const trackId = positiveInt(req.body?.trackId);
+  if (!trackId) return res.status(400).json({ error: 'Invalid track ID' });
+
+  const userId = req.user.userId;
+  try {
+    const favorite = await prisma.favorite.create({ data: { trackId, userId } });
+    return res.status(201).json({ message: 'Трек добавлен в избранное', favorite });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      const favorite = await prisma.favorite.findUnique({ where: { userId_trackId: { userId, trackId } } });
+      return res.json({ message: 'Трек уже добавлен в избранное', favorite });
+    }
+    if (error.code === 'P2003') return res.status(404).json({ error: 'Track or user not found' });
+    throw error;
+  }
+};
+
+exports.removeFavorite = async (req, res) => {
+  const trackId = positiveInt(req.body?.trackId);
+  if (!trackId) return res.status(400).json({ error: 'Invalid track ID' });
+
+  await prisma.favorite.deleteMany({ where: { userId: req.user.userId, trackId } });
+  return res.json({ message: 'Трек удален из избранного' });
+};
+
+exports.getFavorites = async (req, res) => {
+  const favorites = await prisma.favorite.findMany({
+    where: { userId: req.user.userId },
+    select: {
+      favoriteId: true,
+      trackId: true,
+      track: {
+        select: {
+          title: true, artist: true, album: true, genre: true, duration: true,
+          imageUrl: true, filename: true, createdAt: true,
+        },
+      },
+    },
+    orderBy: { favoriteId: 'desc' },
+  });
+  return res.json({
+    favorites: favorites.map(({ track, ...favorite }) => ({ ...favorite, ...track })),
+  });
+};
+</file>
+
+<file path="controllers/reviewController.js">
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
+
+const authorFields = { id: true, username: true, profileImageUrl: true };
+const trackFields = {
+  id: true,
+  title: true,
+  artist: true,
+  createdAt: true,
+  album: true,
+  imageUrl: true,
+  duration: true,
+  genre: true,
+  rating: true,
+};
+
+exports.createReview = async (req, res) => {
+  const { trackId: rawTrackId, content, rating: rawRating } = req.body ?? {};
+  const trackId = positiveInt(rawTrackId);
+  const rating = positiveInt(rawRating);
+  if (trackId === null || typeof content !== 'string' || !content.trim()) {
+    return res.status(400).json({ error: 'Укажите трек и текст отзыва' });
+  }
+  if (rating === null || rating > 5) {
+    return res.status(400).json({ error: 'Рейтинг должен быть целым числом от 1 до 5' });
+  }
+
+  try {
+    const review = await prisma.review.create({
+      data: { userId: req.user.userId, trackId, content: content.trim(), rating },
+    });
+    return res.status(201).json({ message: 'Отзыв создан', review });
+  } catch (error) {
+    if (error.code === 'P2003') {
+      return res.status(404).json({ error: 'Трек или пользователь не найден' });
+    }
+    console.error('Ошибка создания отзыва:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка создания отзыва' });
+  }
+};
+
+exports.getReviewsForTrack = async (req, res) => {
+  const trackId = positiveInt(req.params.trackId);
+  if (trackId === null) return res.status(400).json({ error: 'Недопустимый идентификатор трека' });
+
+  try {
+    const reviews = await prisma.review.findMany({
+      where: { trackId },
+      include: { user: { select: authorFields }, track: { select: trackFields } },
+    });
+    return res.json(reviews);
+  } catch (error) {
+    console.error('Ошибка получения отзывов трека:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка получения отзывов' });
+  }
+};
+
+function listReviews(trackSelect) {
+  return async (req, res) => {
+    try {
+      const reviews = await prisma.review.findMany({
+        include: { user: { select: authorFields }, track: { select: trackSelect } },
+        orderBy: { createdAt: 'desc' },
+      });
+      return res.json(reviews);
+    } catch (error) {
+      console.error('Ошибка получения отзывов:', error.code ?? error.name);
+      return res.status(500).json({ error: 'Ошибка получения отзывов' });
+    }
+  };
+}
+
+exports.getAllReviews = listReviews({ title: true, artist: true });
+exports.getAdminReviews = listReviews({ title: true });
+
+async function deleteReview(req, res, scope) {
+  const id = positiveInt(req.params.id);
+  if (id === null) return res.status(400).json({ error: 'Недопустимый идентификатор отзыва' });
+
+  try {
+    const { count } = await prisma.review.deleteMany({ where: { id, ...scope } });
+    if (count === 0) return res.status(404).json({ error: 'Отзыв не найден' });
+    return res.json({ message: 'Отзыв удален' });
+  } catch (error) {
+    console.error('Ошибка удаления отзыва:', error.code ?? error.name);
+    return res.status(500).json({ error: 'Ошибка удаления отзыва' });
+  }
+}
+
+exports.deleteReview = (req, res) => deleteReview(req, res, {});
+exports.deleteUserReview = (req, res) => {
+  const userId = positiveInt(req.user?.userId);
+  if (userId === null) return res.status(401).json({ error: 'Требуется авторизация' });
+  return deleteReview(req, res, { userId });
+};
+</file>
+
+<file path="controllers/trackController.js">
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const prisma = require('../lib/prisma');
+const {
+  IMAGE_LIMIT, TrackError, trackId, publicStorageKey, legacyName, coverUrl,
+  saveTracks, updateTrack, deleteTrack,
+} = require('../services/tracks');
+
+const tracksDirectory = path.join(__dirname, '..', 'public', 'tracks');
+const legacyAudioExtensions = new Set(['.mp3', '.mp2', '.flac', '.m4a', '.mp4', '.aac', '.ogg', '.oga', '.opus', '.wav', '.aiff']);
+
+function serializeTrack(track) {
+  return { ...track, imageUrl: coverUrl(track.imageUrl) };
+}
+
+function sendError(res, error, message) {
+  if (error instanceof TrackError) return res.status(error.status).json({ error: error.message });
+  console.error(message, error.code || error.name);
+  return res.status(500).json({ error: message });
+}
+
+exports.addTrack = async (req, res) => {
+  try {
+    const cover = req.files?.image?.[0];
+    const audio = req.files?.track?.[0];
+    if (!cover || !audio) throw new TrackError(400, 'Both image and audio file are required');
+    if (cover.size > IMAGE_LIMIT) throw new TrackError(413, 'Image exceeds 5 MiB');
+    const image = await fs.readFile(cover.path);
+    const [track] = await saveTracks([{ audio, image, overrides: req.body }]);
+    res.status(201).json({ message: 'Track uploaded', track: serializeTrack(track) });
+  } catch (error) {
+    sendError(res, error, 'Failed to add track');
+  }
+};
+
+exports.getTracks = async (req, res) => {
+  try {
+    const tracks = await prisma.track.findMany();
+    for (let i = tracks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tracks[i], tracks[j]] = [tracks[j], tracks[i]];
+    }
+    res.json(tracks.map(serializeTrack));
+  } catch (error) {
+    sendError(res, error, 'Failed to get tracks');
+  }
+};
+
+exports.streamTrack = async (req, res, next) => {
+  try {
+    const id = trackId(req.params.id);
+    const track = await prisma.track.findUnique({ where: { id } });
+    if (!track) throw new TrackError(404, 'Track not found');
+    res.set('X-Content-Type-Options', 'nosniff');
+    if (publicStorageKey(track.filename, 'tracks')) {
+      return res.redirect(302, track.filename);
+    }
+
+    const name = legacyName(track.filename, 'tracks');
+    if (!name || !legacyAudioExtensions.has(path.extname(name).toLowerCase())) {
+      throw new TrackError(404, 'Audio file not found');
+    }
+    const file = await fs.lstat(path.join(tracksDirectory, name)).catch(error => {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    });
+    if (!file?.isFile()) throw new TrackError(404, 'Audio file not found');
+    return res.sendFile(name, { root: tracksDirectory, dotfiles: 'deny' }, error => {
+      if (!error || res.destroyed || error.code === 'ECONNABORTED') return;
+      if (res.headersSent) return next(error);
+      if (error.status === 416) {
+        res.set('Content-Range', `bytes */${file.size}`);
+        return res.status(416).end();
+      }
+      const status = error.status === 404 ? 404 : 500;
+      return res.status(status).json({ error: status === 404 ? 'Audio file not found' : 'Failed to stream track' });
+    });
+  } catch (error) {
+    sendError(res, error, 'Failed to stream track');
+  }
+};
+
+exports.search = async (req, res) => {
+  const query = typeof req.query.query === 'string' ? req.query.query.trim() : '';
+  if (!query) return res.status(400).json({ error: 'Query parameter required' });
+  if (query.length > 300) return res.status(400).json({ error: 'Query is too long' });
+  const searchTerm = query.replace(/[\\%_]/g, '\\$&');
+  try {
+    const tracks = await prisma.track.findMany({
+      where: {
+        OR: ['title', 'artist', 'album'].map(field => ({
+          [field]: { contains: searchTerm, mode: 'insensitive' },
+        })),
+      },
+    });
+    res.json(tracks.map(serializeTrack));
+  } catch (error) {
+    sendError(res, error, 'Search failed');
+  }
+};
+
+exports.uploadMultipleTracks = async (req, res) => {
+  try {
+    if (!req.files?.length) throw new TrackError(400, 'No files provided');
+    const tracks = await saveTracks(req.files.map(audio => ({ audio })));
+    res.status(201).json({ message: 'Tracks uploaded', tracks: tracks.map(serializeTrack) });
+  } catch (error) {
+    sendError(res, error, 'Bulk upload failed');
+  }
+};
+
+exports.editTrack = async (req, res) => {
+  try {
+    const track = await updateTrack(req.params.id, req.body || {});
+    res.status(200).json({ message: 'Track updated', track: serializeTrack(track) });
+  } catch (error) {
+    sendError(res, error, 'Failed to update track');
+  }
+};
+
+exports.deleteTrack = async (req, res) => {
+  try {
+    await deleteTrack(req.params.id);
+    res.status(200).json({ message: 'Track deleted' });
+  } catch (error) {
+    sendError(res, error, 'Failed to delete track');
+  }
+};
+</file>
+
+<file path="controllers/userController.js">
+const bcrypt = require('bcrypt');
+const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
+const { detectImageType } = require('../services/images');
+const { issueToken } = require('../services/tokens');
+const { deleteUserAccount, updateUserAvatar } = require('../services/userAccounts');
+
+const SALT_ROUNDS = 10;
+const DUMMY_HASH = '$2b$10$aRm61gwI7yrSl2dQhC9DAOwynHuw5p1eq0OrtxCr4ezoLFTGz5SpC';
+const publicUserFields = {
+  id: true,
+  username: true,
+  telegramName: true,
+  profileImageUrl: true,
+  createdAt: true,
+};
+
+function newUsername(value) {
+  if (typeof value !== 'string') return null;
+  const username = value.trim();
+  return username.length >= 1 && username.length <= 64 && !/[\0-\x1f\x7f]/.test(username) ? username : null;
+}
+
+function isNewPassword(password) {
+  return typeof password === 'string' && password.length >= 8 && Buffer.byteLength(password) <= 72 &&
+    !password.includes('\0');
+}
+
+function isExistingPassword(password) {
+  return typeof password === 'string' && password.length > 0 && Buffer.byteLength(password) <= 1024;
+}
+
+exports.register = async (req, res, next) => {
+  const { username, password } = req.body ?? {};
+  const normalizedUsername = newUsername(username);
+  if (!normalizedUsername) return res.status(400).json({ error: 'Username must be 1–64 characters' });
+  if (!isNewPassword(password)) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters and at most 72 bytes' });
+  }
+
+  try {
+    const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+    const user = await prisma.user.create({
+      data: { username: normalizedUsername, password: hashed },
+      select: { id: true, isAdmin: true },
+    });
+    return res.set('Cache-Control', 'no-store').status(201).json({ message: 'Registered', userId: user.id, token: issueToken(user) });
+  } catch (error) {
+    if (error.code === 'P2002') return res.status(400).json({ error: 'Username already taken' });
+    next(error);
+  }
+};
+
+exports.login = async (req, res, next) => {
+  const { username, password } = req.body ?? {};
+  if (typeof username !== 'string' || !username || username.length > 1024 || username.includes('\0') ||
+      !isExistingPassword(password)) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  try {
+    const select = { id: true, password: true, isAdmin: true };
+    const normalizedUsername = username.trim();
+    let user = await prisma.user.findUnique({ where: { username }, select });
+    if (!user && normalizedUsername && normalizedUsername !== username) {
+      user = await prisma.user.findUnique({ where: { username: normalizedUsername }, select });
+    }
+    const matches = await bcrypt.compare(password, user?.password ?? DUMMY_HASH);
+    if (!user?.password || !matches) return res.status(401).json({ error: 'Invalid credentials' });
+    return res.set('Cache-Control', 'no-store').json({ message: 'Logged in', token: issueToken(user), admin: user.isAdmin });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.logout = (req, res) => {
+  // Bearer tokens are stateless. The client clears its session on logout.
+  res.set('Cache-Control', 'no-store').json({ message: 'Выход выполнен' });
+};
+
+exports.edit_pass = async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body ?? {};
+  if (!isExistingPassword(currentPassword) || !isNewPassword(newPassword)) {
+    return res.status(400).json({ error: 'Укажите текущий пароль и новый пароль от 8 символов до 72 байт' });
+  }
+
+  try {
+    const { userId } = req.user;
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { password: true } });
+    if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (!user.password || !await bcrypt.compare(currentPassword, user.password)) {
+      return res.status(401).json({ error: 'Текущий пароль неверен' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    const { count } = await prisma.$transaction(async (tx) => {
+      const result = await tx.user.updateMany({
+        where: { id: userId, password: user.password },
+        data: { password: hashed },
+      });
+      if (result.count) await tx.telegramLinkCode.deleteMany({ where: { userId } });
+      return result;
+    });
+    if (!count) return res.status(409).json({ error: 'Пароль изменился. Повторите попытку.' });
+    return res.json({ message: 'Пароль успешно изменен' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.edit_username = async (req, res, next) => {
+  const username = newUsername(req.body?.newUsername);
+  if (!username) return res.status(400).json({ error: 'Имя пользователя должно содержать от 1 до 64 символов' });
+
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { username },
+      select: { username: true },
+    });
+    return res.json({ message: 'Имя пользователя успешно изменено', username: user.username });
+  } catch (error) {
+    if (error.code === 'P2002') return res.status(400).json({ error: 'Имя пользователя уже занято' });
+    if (error.code === 'P2025') return res.status(404).json({ error: 'Пользователь не найден' });
+    next(error);
+  }
+};
+
+exports.uploadProfileImage = async (req, res, next) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const image = detectImageType(req.file.buffer);
+  if (!image) return res.status(415).json({ error: 'Supported avatar formats are JPEG, PNG, GIF and WebP' });
+
+  try {
+    const result = await updateUserAvatar(req.user.userId, req.file.buffer, image);
+    if (result.status === 'missing') return res.status(404).json({ error: 'User not found' });
+    if (result.status === 'conflict') return res.status(409).json({ error: 'Profile changed. Try again.' });
+    return res.json({ message: 'Profile image updated', profileImageUrl: result.profileImageUrl });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getUserProfile = async (req, res, next) => {
+  try {
+    const account = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { ...publicUserFields, telegramId: true, telegramPhotoUrl: true, isAdmin: true, updatedAt: true, password: true },
+    });
+    if (!account) return res.status(404).json({ error: 'User not found' });
+    const { password, ...user } = account;
+    return res.set('Cache-Control', 'no-store').json({
+      ...user,
+      hasPassword: Boolean(user.username && password),
+      profileImageUrl: user.profileImageUrl ?? user.telegramPhotoUrl ?? null,
+      displayName: user.telegramName ?? user.username ?? `User#${user.id}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await prisma.user.findMany({ select: publicUserFields });
+    res.json({ users });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getUserById = async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: res.locals.targetUserId }, select: publicUserFields });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    return res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteUser = async (req, res, next) => {
+  const id = positiveInt(req.params.id);
+  if (!id) return res.status(400).json({ error: 'Invalid ID' });
+  try {
+    const deleted = await deleteUserAccount(id);
+    if (!deleted) return res.status(404).json({ error: 'Пользователь не найден' });
+    return res.json({ message: 'Пользователь и все связанные данные успешно удалены' });
+  } catch (error) {
+    if (error.code === 'P2003') return res.status(409).json({ error: 'Данные пользователя изменились. Повторите попытку.' });
+    next(error);
+  }
+};
+</file>
+
+<file path="app.js">
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const path = require('node:path');
+const multer = require('multer');
+
+function createApp({ logRequests = true } = {}) {
+  const app = express();
+  app.disable('x-powered-by');
+  const proxyHops = Number(process.env.TRUST_PROXY_HOPS);
+  if (Number.isInteger(proxyHops) && proxyHops > 0) app.set('trust proxy', proxyHops);
+
+  const allowedOrigins = new Set([
+    'https://muisicunderlab.vercel.app',
+    'https://underlab-phi.vercel.app',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5180',
+    'http://127.0.0.1:5180',
+    ...(process.env.CORS_ORIGINS ?? '').split(',').map((origin) => origin.trim()).filter(Boolean),
+  ]);
+
+  app.use(cors({
+    origin: (origin, callback) => callback(null, !origin || allowedOrigins.has(origin)),
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Range', 'Authorization'],
+    exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'],
+  }));
+  app.use(express.json({ limit: '64kb' }));
+  app.use(express.urlencoded({ extended: false, limit: '64kb' }));
+  if (logRequests) app.use(morgan(':method :status :response-time ms'));
+
+  app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+  app.use('/avatars', express.static(path.join(__dirname, 'public', 'avatars')));
+  app.use('/auth', require('./routes/authRoutes'));
+  app.use('/users', require('./routes/userRoutes'));
+  app.use('/tracks', require('./routes/trackRoutes'));
+  app.use('/playback', require('./routes/playbackRoutes'));
+  app.use('/favorites', require('./routes/favoriteRoutes'));
+  app.use('/complaints', require('./routes/complaintRoutes'));
+  app.use('/reviews', require('./routes/reviewRoutes'));
+  app.use('/api/admin', require('./routes/adminRoutes'));
+
+  app.use((req, res) => res.status(404).json({ error: 'Not found' }));
+  app.use((error, req, res, next) => {
+    if (res.headersSent) return next(error);
+    if (error instanceof multer.MulterError) {
+      const tooLarge = error.code === 'LIMIT_FILE_SIZE' || error.code === 'LIMIT_FILE_COUNT';
+      return res.status(tooLarge ? 413 : 400).json({
+        error: tooLarge ? 'Upload exceeds the configured limit' : 'Invalid multipart upload',
+      });
+    }
+    const status = error.status ?? error.statusCode;
+    if (Number.isInteger(status) && status >= 400 && status < 500) {
+      const message = status === 413 ? 'Request body is too large' : 'Invalid request';
+      return res.status(status).json({ error: message });
+    }
+    console.error('Unhandled request error:', error.name);
+    return res.status(500).json({ error: 'Internal server error' });
+  });
+  return app;
+}
+
+if (require.main === module) {
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required');
+  const port = process.env.PORT || 4000;
+  createApp().listen(port, () => {
+    console.log(`Сервер запущен на порту ${port}`);
+    require('./bot/bot').launch();
+  });
+}
+
+module.exports = { createApp };
+</file>
+
+<file path="prisma/schema.prisma">
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native","debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+
+model Track {
+  id        Int        @id @default(autoincrement())
+  title     String
+  artist    String
+  filename  String     // storage path in Supabase: "tracks/filename.mp3"
+  createdAt DateTime   @default(now())
+  album     String?
+  imageUrl  String?    // full public URL from Supabase Storage
+  duration  Int?       // seconds
+  genre       String?
+  favorites Favorite[]
+  reviews    Review[]
+  rating    Float?
+}
+
+model User {
+  id              Int        @id @default(autoincrement())
+  username        String?    @unique   // optional — Telegram users may not set one
+  password        String?             // optional — Telegram users have no password
+     
+  telegramId      String?     @unique  // Telegram user ID (string — avoids int overflow)
+  telegramUsername String?            // display name pulled from Telegram
+  telegramName String?
+  telegramPhotoUrl String?
+  telegramAuthVersion Int @default(0)
+  telegramLinkCode TelegramLinkCode?
+
+  isAdmin         Boolean    @default(false)
+  profileImageUrl String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  favorites       Favorite[]
+  complaints      Complaint[]
+  reviews         Review[]
+  playbackSession PlaybackSession?
+  playbackDevices PlaybackDevice[]
+}
+
+model TelegramLinkCode {
+  userId    Int      @id
+  codeHash  String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model PlaybackSession {
+  userId          Int       @id
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  version         Int       @default(0)
+  activeDeviceId  String?   @db.Uuid
+  pendingDeviceId String?   @db.Uuid
+  leaseUntil      DateTime?
+  handoffResume   Boolean   @default(false)
+  trackId         Int?
+  duration        Int?
+  queue           Int[]     @default([])
+  queueIndex      Int       @default(-1)
+  shuffleOrder    Int[]     @default([])
+  playing         Boolean   @default(false)
+  position        Float     @default(0)
+  positionAt      DateTime  @default(now())
+  shuffle         Boolean   @default(false)
+  repeat          String    @default("none")
+}
+
+model PlaybackDevice {
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @db.Uuid
+  keyHash    String   @db.Char(64)
+  name       String
+  platform   String
+  lastSeenAt DateTime @default(now())
+
+  @@id([userId, id])
+  @@index([userId, lastSeenAt])
+}
+
+model Favorite {
+  favoriteId Int      @id @default(autoincrement())
+  trackId    Int
+  userId     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+  track      Track    @relation(fields: [trackId], references: [id])
+
+  @@unique([userId, trackId])
+  @@index([trackId])
+}
+
+model Complaint {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  message    String
+  status     String   @default("ожидание") // Возможные значения: pending, resolved, rejected
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  trackId    Int
+  content    String
+  rating     Int      // Рейтинг (1-5)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+  track      Track    @relation(fields: [trackId], references: [id])
+
+  @@index([trackId])
+  @@index([userId])
+}
+</file>
+
+</files>

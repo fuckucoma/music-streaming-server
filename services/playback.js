@@ -243,7 +243,10 @@ async function playChanges(session, now, deviceId, command) {
   const position = command.position ?? (sameTrack ? projectedPosition(session, now) : 0);
   const playingFrom = duration !== null && position >= duration ? 0 : position;
   return {
-    ...claim(session, now, deviceId),
+    activeDeviceId: deviceId,
+    pendingDeviceId: null,
+    handoffResume: false,
+    leaseUntil: leaseDeadline(now),
     trackId,
     duration,
     queue,
