@@ -1,7 +1,7 @@
 const { positiveInt } = require('../lib/validation');
 
-const LEASE_MS = 12_000;
-const ONLINE_MS = 30_000;
+const LEASE_MS = 30_000;
+const ONLINE_MS = 60_000;
 const MAX_QUEUE = 300;
 const MAX_POSITION = 7 * 24 * 60 * 60;
 const repeatOptions = new Set(['none', 'all', 'one']);

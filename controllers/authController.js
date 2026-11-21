@@ -1,10 +1,10 @@
 const prisma = require('../lib/prisma');
+const { startAuthSession } = require('../services/authSessions');
 const { telegramIdentity } = require('../services/telegramIdentity');
 const { readTelegramUser } = require('../services/telegramInitData');
 const {
   TelegramLinkError, createTelegramLinkCode, previewTelegramLink, confirmTelegramLink, unlinkTelegram,
 } = require('../services/telegramLink');
-const { issueToken } = require('../services/tokens');
 
 const LINK_INIT_DATA_MAX_AGE = 5 * 60;
 
@@ -22,17 +22,20 @@ exports.telegramAuth = async (req, res, next) => {
   const { telegramId, ...details } = telegramIdentity(telegramUser);
 
   try {
-    const user = await prisma.user.upsert({
-      where: { telegramId },
-      create: { telegramId, ...details },
-      update: details,
-      select: {
-        id: true, isAdmin: true, telegramId: true, telegramAuthVersion: true,
-        telegramName: true, profileImageUrl: true, telegramPhotoUrl: true,
-      },
+    const { user, token } = await prisma.$transaction(async (tx) => {
+      const account = await tx.user.upsert({
+        where: { telegramId },
+        create: { telegramId, ...details },
+        update: details,
+        select: {
+          id: true, isAdmin: true, telegramId: true, telegramAuthVersion: true, authSessionVersion: true,
+          telegramName: true, profileImageUrl: true, telegramPhotoUrl: true,
+        },
+      });
+      return { user: account, token: await startAuthSession(tx, account, req.headers['user-agent']) };
     });
     return res.set('Cache-Control', 'no-store').json({
-      token: issueToken(user),
+      token,
       user: {
         id: user.id,
         displayName: user.telegramName,
@@ -70,9 +73,12 @@ exports.previewLink = linkHandler((req, { code, initData }) =>
   previewTelegramLink(code, linkIdentity(initData).telegramId));
 exports.confirmLink = linkHandler(async (req, { code, initData, confirmMerge }) => {
   const user = await confirmTelegramLink(code, linkIdentity(initData), confirmMerge === true);
-  return { token: issueToken(user) };
+  return { token: await startAuthSession(prisma, user, req.headers['user-agent']) };
 });
 exports.unlinkTelegram = linkHandler(async (req, { password }) => {
   const user = await unlinkTelegram(req.user.userId, password);
-  return { token: issueToken(user) };
+  const token = req.user.method === 'password'
+    ? req.headers.authorization.split(/\s+/, 2)[1]
+    : await startAuthSession(prisma, user, req.headers['user-agent']);
+  return { token };
 });

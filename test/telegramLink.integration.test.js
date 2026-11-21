@@ -18,6 +18,7 @@ test('Telegram link codes expire, are single-use, and unlink revokes old Telegra
   const prisma = require('../lib/prisma');
   const { readAuthenticatedUser } = require('../middlewares/auth');
   const { issueToken } = require('../services/tokens');
+  const { startAuthSession } = require('../services/authSessions');
   const { createTelegramLinkCode, previewTelegramLink, confirmTelegramLink, unlinkTelegram } = require('../services/telegramLink');
 
   const username = `link-fixture-${randomUUID()}`;
@@ -64,16 +65,19 @@ test('Telegram link codes expire, are single-use, and unlink revokes old Telegra
   const linked = await confirmTelegramLink(invite.code, identity, true);
   assert.equal(linked.id, browser.id);
   assert.equal(await prisma.user.findUnique({ where: { id: duplicate.id } }), null);
-  const linkedToken = issueToken(linked);
-  assert.deepEqual(await readAuthenticatedUser(`Bearer ${linkedToken}`), { userId: browser.id });
+  const linkedToken = await startAuthSession(prisma, linked);
+  const session = await readAuthenticatedUser(`Bearer ${linkedToken}`);
+  assert.equal(session.userId, browser.id);
   await assert.rejects(confirmTelegramLink(invite.code, identity, true), { status: 404 });
 
   await assert.rejects(unlinkTelegram(browser.id, 'wrong'), { status: 400 });
   await unlinkTelegram(browser.id, password);
   assert.equal(await readAuthenticatedUser(`Bearer ${linkedToken}`), null);
-  assert.deepEqual(await readAuthenticatedUser(`Bearer ${browserToken}`), { userId: browser.id });
+  assert.equal((await readAuthenticatedUser(`Bearer ${browserToken}`)).userId, browser.id);
+  assert.ok((await prisma.authSession.findUnique({ where: { id: session.sessionId } })).revokedAt);
   const fresh = await createTelegramLinkCode(browser.id, password);
   const relinked = await confirmTelegramLink(fresh.code, identity, false);
   assert.equal(await readAuthenticatedUser(`Bearer ${linkedToken}`), null);
-  assert.deepEqual(await readAuthenticatedUser(`Bearer ${issueToken(relinked)}`), { userId: browser.id });
+  const replacement = await startAuthSession(prisma, relinked);
+  assert.equal((await readAuthenticatedUser(`Bearer ${replacement}`)).userId, browser.id);
 });

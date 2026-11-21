@@ -9,6 +9,7 @@ const adminOnly = [authenticateToken, requireAdmin];
 
 router.get('/', trackController.getTracks);
 router.get('/search', trackController.search);
+router.get('/by-ids', trackController.getTracksByIds);
 router.get('/:id/stream', trackController.streamTrack);
 
 router.post(

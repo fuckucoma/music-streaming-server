@@ -2,7 +2,8 @@ const bcrypt = require('bcrypt');
 const prisma = require('../lib/prisma');
 const { positiveInt } = require('../lib/validation');
 const { detectImageType } = require('../services/images');
-const { issueToken } = require('../services/tokens');
+const { startAuthSession, listAuthSessions, revokeAuthSession, revokeUserAuthSessions } = require('../services/authSessions');
+const { SESSION_ID_PATTERN } = require('../services/tokens');
 const { deleteUserAccount, updateUserAvatar } = require('../services/userAccounts');
 
 const SALT_ROUNDS = 10;
@@ -40,11 +41,14 @@ exports.register = async (req, res, next) => {
 
   try {
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
-    const user = await prisma.user.create({
-      data: { username: normalizedUsername, password: hashed },
-      select: { id: true, isAdmin: true },
+    const { userId, token } = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: { username: normalizedUsername, password: hashed },
+        select: { id: true, isAdmin: true, authSessionVersion: true },
+      });
+      return { userId: user.id, token: await startAuthSession(tx, user, req.headers['user-agent']) };
     });
-    return res.set('Cache-Control', 'no-store').status(201).json({ message: 'Registered', userId: user.id, token: issueToken(user) });
+    return res.set('Cache-Control', 'no-store').status(201).json({ message: 'Registered', userId, token });
   } catch (error) {
     if (error.code === 'P2002') return res.status(400).json({ error: 'Username already taken' });
     next(error);
@@ -59,7 +63,7 @@ exports.login = async (req, res, next) => {
   }
 
   try {
-    const select = { id: true, password: true, isAdmin: true };
+    const select = { id: true, password: true, isAdmin: true, authSessionVersion: true };
     const normalizedUsername = username.trim();
     let user = await prisma.user.findUnique({ where: { username }, select });
     if (!user && normalizedUsername && normalizedUsername !== username) {
@@ -67,15 +71,41 @@ exports.login = async (req, res, next) => {
     }
     const matches = await bcrypt.compare(password, user?.password ?? DUMMY_HASH);
     if (!user?.password || !matches) return res.status(401).json({ error: 'Invalid credentials' });
-    return res.set('Cache-Control', 'no-store').json({ message: 'Logged in', token: issueToken(user), admin: user.isAdmin });
+    const token = await startAuthSession(prisma, user, req.headers['user-agent']);
+    return res.set('Cache-Control', 'no-store').json({ message: 'Logged in', token, admin: user.isAdmin });
   } catch (error) {
     next(error);
   }
 };
 
-exports.logout = (req, res) => {
-  // Bearer tokens are stateless. The client clears its session on logout.
-  res.set('Cache-Control', 'no-store').json({ message: 'Выход выполнен' });
+exports.logout = async (req, res, next) => {
+  try {
+    await revokeAuthSession(req.user.userId, req.user.sessionId);
+    return res.set('Cache-Control', 'no-store').json({ message: 'Выход выполнен' });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.sessions = async (req, res, next) => {
+  try {
+    const sessions = await listAuthSessions(req.user);
+    return res.set('Cache-Control', 'no-store').json({ sessions });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.revokeSession = async (req, res, next) => {
+  const id = req.params.id;
+  if (!SESSION_ID_PATTERN.test(id)) return res.status(404).json({ error: 'Session not found' });
+  try {
+    const revoked = await revokeAuthSession(req.user.userId, id);
+    if (!revoked) return res.status(404).json({ error: 'Session not found' });
+    return res.set('Cache-Control', 'no-store').json({ revoked });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 exports.edit_pass = async (req, res, next) => {
@@ -96,9 +126,12 @@ exports.edit_pass = async (req, res, next) => {
     const { count } = await prisma.$transaction(async (tx) => {
       const result = await tx.user.updateMany({
         where: { id: userId, password: user.password },
-        data: { password: hashed },
+        data: { password: hashed, authSessionVersion: { increment: 1 } },
       });
-      if (result.count) await tx.telegramLinkCode.deleteMany({ where: { userId } });
+      if (result.count) {
+        await revokeUserAuthSessions(tx, userId);
+        await tx.telegramLinkCode.deleteMany({ where: { userId } });
+      }
       return result;
     });
     if (!count) return res.status(409).json({ error: 'Пароль изменился. Повторите попытку.' });

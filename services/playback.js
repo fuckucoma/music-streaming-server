@@ -1,5 +1,6 @@
 const { createHash, timingSafeEqual } = require('node:crypto');
 const { EventEmitter } = require('node:events');
+const { Prisma } = require('@prisma/client');
 const prisma = require('../lib/prisma');
 const {
   ONLINE_MS, PlaybackError, emptySession, hasLiveLease, leaseDeadline, boundedPosition,
@@ -9,6 +10,7 @@ const {
 
 const MAX_DEVICES = 20;
 const DEVICE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+const PRESENCE_WRITE_INTERVAL = 10_000;
 const platforms = new Set(['browser', 'telegram']);
 const events = new EventEmitter();
 
@@ -18,8 +20,19 @@ function subscribe(userId, listener) {
   return () => events.off(key, listener);
 }
 
-function publish(userId) {
-  events.emit(String(userId));
+function publishPlaybackChange(userId, snapshot) {
+  events.emit(String(userId), snapshot);
+}
+
+async function changedSnapshot(userId) {
+  try {
+    const snapshot = await getSnapshot(userId);
+    publishPlaybackChange(userId, snapshot);
+    return snapshot;
+  } catch (error) {
+    publishPlaybackChange(userId);
+    throw error;
+  }
 }
 
 async function databaseTime(connection = prisma) {
@@ -56,6 +69,11 @@ function expectedVersion(body) {
 
 function isOnline(device, now) {
   return Boolean(device && now.getTime() - device.lastSeenAt.getTime() < ONLINE_MS);
+}
+
+async function lockSession(db, userId) {
+  await db.$queryRaw`SELECT "userId" FROM "PlaybackSession" WHERE "userId" = ${userId} FOR UPDATE`;
+  return db.playbackSession.findUnique({ where: { userId } });
 }
 
 async function getSnapshot(userId) {
@@ -102,23 +120,58 @@ async function registerDevice(userId, body) {
       return;
     }
 
-    const session = await tx.playbackSession.upsert({ where: { userId }, create: { userId }, update: {} });
+    const session = await lockSession(tx, userId) ?? await tx.playbackSession.create({ data: { userId } });
     const protectedIds = [session.activeDeviceId, session.pendingDeviceId].filter(Boolean);
     const eligible = { userId, id: { notIn: protectedIds } };
-    await tx.playbackDevice.deleteMany({
+    const pruned = await tx.playbackDevice.deleteMany({
       where: { ...eligible, lastSeenAt: { lt: new Date(now.getTime() - DEVICE_RETENTION_MS) } },
     });
+    let evicted = false;
     if (await tx.playbackDevice.count({ where: { userId } }) >= MAX_DEVICES) {
       const offline = { ...eligible, lastSeenAt: { lt: new Date(now.getTime() - ONLINE_MS) } };
       const oldest = await tx.playbackDevice.findFirst({ where: offline, orderBy: { lastSeenAt: 'asc' } });
       if (!oldest) throw new PlaybackError(409, 'Too many playback devices are online');
       const removed = await tx.playbackDevice.deleteMany({ where: { ...offline, id: oldest.id } });
       if (!removed.count) throw new PlaybackError(409, 'Device roster changed');
+      evicted = true;
+    }
+    if (pruned.count || evicted) {
+      await tx.playbackSession.update({ where: { userId }, data: { version: { increment: 1 } } });
     }
     await tx.playbackDevice.create({ data: { ...data, ...credentials, userId } });
   });
-  publish(userId);
-  return getSnapshot(userId);
+  return changedSnapshot(userId);
+}
+
+async function removeDevice(userId, targetDeviceId) {
+  const id = validateDeviceId(targetDeviceId);
+  await prisma.$transaction(async tx => {
+    const session = await lockSession(tx, userId);
+    const now = await databaseTime(tx);
+    const device = await tx.playbackDevice.findUnique({ where: deviceWhere(userId, id) });
+    if (!device) throw new PlaybackError(404, 'Playback device not found');
+    if (isOnline(device, now)) throw new PlaybackError(409, 'Only offline devices can be removed');
+    const wasActive = session?.activeDeviceId === id;
+    const wasPending = session?.pendingDeviceId === id;
+    if ((wasActive || wasPending) && hasLiveLease(session, now)) {
+      throw new PlaybackError(409, 'Finish the active device handoff before removing this device');
+    }
+
+    const result = await tx.playbackDevice.deleteMany({
+      where: { userId, id, lastSeenAt: { lte: new Date(now.getTime() - ONLINE_MS) } },
+    });
+    if (!result.count) throw new PlaybackError(409, 'Playback device came online');
+    if (session) {
+      const data = { version: { increment: 1 } };
+      if (wasActive) Object.assign(data, {
+        activeDeviceId: null, leaseUntil: null, position: projectedPosition(session, now),
+        positionAt: now, playing: false,
+      });
+      if (wasPending) Object.assign(data, { pendingDeviceId: null, handoffResume: false });
+      await tx.playbackSession.update({ where: { userId }, data });
+    }
+  });
+  return changedSnapshot(userId);
 }
 
 async function verifyDevice(userId, body, touch = false) {
@@ -127,7 +180,7 @@ async function verifyDevice(userId, body, touch = false) {
   if (!matchesDevice(device, credentials)) throw new PlaybackError(403, 'Unknown playback device');
   if (touch) {
     const now = await databaseTime();
-    if (now > device.lastSeenAt) {
+    if (now.getTime() - device.lastSeenAt.getTime() >= PRESENCE_WRITE_INTERVAL) {
       const touched = await prisma.playbackDevice.updateMany({
         where: { userId, id: device.id, keyHash: credentials.keyHash, lastSeenAt: { lt: now } },
         data: { lastSeenAt: now },
@@ -141,30 +194,29 @@ async function verifyDevice(userId, body, touch = false) {
   return device.id;
 }
 
-async function mutateSession(userId, version, transition) {
+async function mutateSession(userId, version, transition, lockTracks = false) {
   for (let attempt = 0; attempt < 5; attempt++) {
-    const session = await prisma.playbackSession.findUnique({ where: { userId } });
-    if (!session) throw new PlaybackError(403, 'No registered playback session');
-    if (version !== undefined && session.version !== version) {
-      throw new PlaybackError(409, 'Playback session changed');
-    }
-    const now = await databaseTime();
-    const mutation = await transition(session, now);
-    if (!mutation) return;
-    const { changes, extendOnly } = mutation;
-    const result = await prisma.playbackSession.updateMany({
-      // Heartbeats leave version stable. The lease belongs in the CAS so a handoff
-      // cannot shorten an already-issued permit for the outgoing audio device.
-      where: {
-        userId, version: session.version, leaseUntil: session.leaseUntil,
-        position: session.position, positionAt: session.positionAt,
-      },
-      data: extendOnly ? changes : { ...changes, version: { increment: 1 } },
-    });
-    if (result.count) {
-      publish(userId);
-      return;
-    }
+    const update = async db => {
+      const session = await db.playbackSession.findUnique({ where: { userId } });
+      if (!session) throw new PlaybackError(403, 'No registered playback session');
+      if (version !== undefined && session.version !== version) {
+        throw new PlaybackError(409, 'Playback session changed');
+      }
+      const now = await databaseTime(db);
+      const mutation = await transition(session, now, db);
+      if (!mutation) return true;
+      const { changes, extendOnly } = mutation;
+      const result = await db.playbackSession.updateMany({
+        // Heartbeats can renew a permit without changing version.
+        where: {
+          userId, version: session.version, leaseUntil: session.leaseUntil,
+          position: session.position, positionAt: session.positionAt,
+        },
+        data: extendOnly ? changes : { ...changes, version: { increment: 1 } },
+      });
+      return result.count === 1;
+    };
+    if (lockTracks ? await prisma.$transaction(update) : await update(prisma)) return;
   }
   throw new PlaybackError(409, 'Playback session changed');
 }
@@ -195,8 +247,10 @@ async function heartbeat(userId, body) {
       return { changes: finishHandoff(session, now) };
     }
     if (live && session.activeDeviceId === deviceId && !session.pendingDeviceId) {
-      const changes = { leaseUntil: leaseDeadline(now) };
-      if (session.playing && report?.version === session.version && report.trackId === session.trackId) {
+      const deadline = leaseDeadline(now);
+      const changes = { leaseUntil: deadline > session.leaseUntil ? deadline : session.leaseUntil };
+      if (session.playing && now >= session.positionAt &&
+          report?.version === session.version && report.trackId === session.trackId) {
         changes.position = boundedPosition(report.position, session.duration);
         changes.positionAt = now;
       }
@@ -204,7 +258,7 @@ async function heartbeat(userId, body) {
     }
     return null;
   });
-  return getSnapshot(userId);
+  return changedSnapshot(userId);
 }
 
 async function acknowledge(userId, body) {
@@ -216,24 +270,28 @@ async function acknowledge(userId, body) {
     if (!session.pendingDeviceId) throw new PlaybackError(409, 'No pending handoff');
     return { changes: finishHandoff(session, now, position) };
   });
-  return getSnapshot(userId);
+  return changedSnapshot(userId);
 }
 
-async function catalogTracks(ids) {
+async function catalogTracks(db, ids) {
   if (!ids.length) return new Map();
-  const tracks = await prisma.track.findMany({
-    where: { id: { in: ids } },
-    select: { id: true, duration: true },
-  });
+  // Track deletion locks the same rows before touching playback sessions.
+  const tracks = await db.$queryRaw(Prisma.sql`
+    SELECT "id", "duration"
+    FROM "Track"
+    WHERE "id" IN (${Prisma.join(ids)})
+    ORDER BY "id"
+    FOR KEY SHARE
+  `);
   return new Map(tracks.map(track => [track.id, track]));
 }
 
-async function playChanges(session, now, deviceId, command) {
+async function playChanges(db, session, now, deviceId, command) {
   let queue = command.queue ?? session.queue;
   const trackId = command.trackId ?? (command.queue ? queue[0] : session.trackId);
   if (!trackId) throw new PlaybackError(409, 'Select a track first');
   if (!queue.includes(trackId)) queue = [trackId];
-  const tracks = await catalogTracks(queue);
+  const tracks = await catalogTracks(db, queue);
   if (!tracks.has(trackId)) throw new PlaybackError(404, 'Track no longer exists');
   queue = queue.filter(id => tracks.has(id));
   const index = queue.indexOf(trackId);
@@ -243,10 +301,7 @@ async function playChanges(session, now, deviceId, command) {
   const position = command.position ?? (sameTrack ? projectedPosition(session, now) : 0);
   const playingFrom = duration !== null && position >= duration ? 0 : position;
   return {
-    activeDeviceId: deviceId,
-    pendingDeviceId: null,
-    handoffResume: false,
-    leaseUntil: leaseDeadline(now),
+    ...claim(session, now, deviceId),
     trackId,
     duration,
     queue,
@@ -260,7 +315,7 @@ async function playChanges(session, now, deviceId, command) {
   };
 }
 
-async function navigationChanges(session, now, deviceId, command) {
+async function navigationChanges(db, session, now, deviceId, command) {
   const fromEnded = command.type === 'ended';
   const position = projectedPosition(session, now);
   const live = hasLiveLease(session, now);
@@ -277,7 +332,7 @@ async function navigationChanges(session, now, deviceId, command) {
   }
 
   const candidates = navigationCandidates(session, command.type, fromEnded);
-  const tracks = await catalogTracks(candidates.map(index => session.queue[index]));
+  const tracks = await catalogTracks(db, candidates.map(index => session.queue[index]));
   const index = candidates.find(candidate => tracks.has(session.queue[candidate]));
   if (index === undefined) {
     return { playing: false, position: fromEnded ? session.duration ?? position : position, positionAt: now };
@@ -307,7 +362,7 @@ async function transferChanges(userId, session, now, targetDeviceId) {
   }, now);
 }
 
-async function commandChanges(userId, session, now, deviceId, command) {
+async function commandChanges(db, userId, session, now, deviceId, command) {
   if (command.type === 'transfer') return transferChanges(userId, session, now, command.targetDeviceId);
 
   const live = hasLiveLease(session, now);
@@ -321,7 +376,7 @@ async function commandChanges(userId, session, now, deviceId, command) {
 
   switch (command.type) {
     case 'play':
-      return playChanges(session, now, deviceId, command);
+      return playChanges(db, session, now, deviceId, command);
     case 'pause':
     case 'release': {
       if (command.type === 'release' && session.activeDeviceId !== deviceId) {
@@ -338,7 +393,7 @@ async function commandChanges(userId, session, now, deviceId, command) {
     case 'next':
     case 'previous':
     case 'ended':
-      return navigationChanges(session, now, deviceId, command);
+      return navigationChanges(db, session, now, deviceId, command);
     case 'setShuffle':
       if (session.shuffle === command.shuffle) return null;
       return { shuffle: command.shuffle, shuffleOrder: command.shuffle ? shuffledOrder(session.queue, session.queueIndex) : [] };
@@ -351,11 +406,15 @@ async function applyCommand(userId, body) {
   const deviceId = await verifyDevice(userId, body, true);
   const version = expectedVersion(body);
   const command = validatePlaybackCommand(body.command);
-  await mutateSession(userId, version, async (session, now) => {
-    const changes = await commandChanges(userId, session, now, deviceId, command);
+  const lockTracks = ['play', 'next', 'previous', 'ended'].includes(command.type);
+  await mutateSession(userId, version, async (session, now, db) => {
+    const changes = await commandChanges(db, userId, session, now, deviceId, command);
     return changes ? { changes } : null;
-  });
-  return getSnapshot(userId);
+  }, lockTracks);
+  return changedSnapshot(userId);
 }
 
-module.exports = { getSnapshot, registerDevice, heartbeat, acknowledge, applyCommand, subscribe, PlaybackError };
+module.exports = {
+  getSnapshot, registerDevice, removeDevice, heartbeat, acknowledge, applyCommand, subscribe,
+  publishPlaybackChange, PlaybackError,
+};

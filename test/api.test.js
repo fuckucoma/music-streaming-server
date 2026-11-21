@@ -23,8 +23,9 @@ const track = {
   id: 1, title: 'Sample', artist: 'Artist', album: 'Album', duration: 90,
   imageUrl: null, filename: legacyFile,
 };
-const user = { id: 7, username: 'listener', isAdmin: false, profileImageUrl: null };
+const user = { id: 7, username: 'listener', isAdmin: false, profileImageUrl: null, authSessionVersion: 0 };
 const memberToken = issueToken(user);
+const authSessions = new Map();
 let favorite;
 let telegramUser;
 let server;
@@ -32,24 +33,48 @@ let base;
 
 before(async () => {
   // Real Express routes and middleware, with fixture data in place of external services.
+  const account = id => id === user.id ? user : telegramUser?.id === id ? telegramUser : null;
+  const matches = (record, fields) => record && Object.entries(fields).every(([key, value]) => record[key] === value);
   prisma.user.findUnique = async ({ where, select }) => {
-    const result = where.id === user.id ? user : telegramUser?.id === where.id ? telegramUser : null;
+    const result = account(where.id);
     if (!result || !select) return result;
     return Object.fromEntries(Object.keys(select).map((key) => [key, result[key]]));
   };
   prisma.user.upsert = async ({ where, create }) => {
     assert.equal(where.telegramId, '555');
-    telegramUser = { ...create, id: 8, isAdmin: false };
+    telegramUser = { ...create, id: 8, isAdmin: false, authSessionVersion: 0, telegramAuthVersion: 0 };
     return telegramUser;
+  };
+  prisma.user.findFirst = async ({ where }) => matches(account(where.id), where) ? { id: where.id } : null;
+  prisma.$transaction = async (work) => work(prisma);
+  prisma.authSession.create = async ({ data }) => {
+    authSessions.set(data.id, { ...data, revokedAt: null });
+  };
+  prisma.authSession.createMany = async ({ data: [session] }) => {
+    if (!authSessions.has(session.id)) await prisma.authSession.create({ data: session });
+  };
+  prisma.authSession.deleteMany = async () => ({ count: 0 });
+  prisma.authSession.findUnique = async ({ where }) => authSessions.get(where.id) ?? null;
+  prisma.authSession.findFirst = async ({ where: { expiresAt, user: owner, ...fields } }) => {
+    const session = authSessions.get(fields.id);
+    return matches(session, fields) && session.expiresAt > expiresAt.gt && matches(account(session.userId), owner)
+      ? { id: session.id } : null;
   };
   prisma.track.findUnique = async ({ where }) => {
     if (where.id === 1) return track;
     if (where.id === 2) return { ...track, id: 2, filename: storedFile };
     return null;
   };
-  prisma.track.findMany = async ({ where } = {}) => {
-    if (where) {
+  prisma.track.findMany = async ({ where, orderBy, take } = {}) => {
+    if (where?.OR) {
       assert.deepEqual(where.OR.map((rule) => Object.keys(rule)[0]), ['title', 'artist', 'album']);
+    }
+    if (where?.id?.in) {
+      return [track, { ...track, id: 2 }].filter(x => where.id.in.includes(x.id));
+    }
+    if (orderBy) {
+      assert.deepEqual(orderBy, { id: 'desc' });
+      return [{ ...track, id: 2 }, track].filter(x => x.id < (where.id?.lt ?? Infinity)).slice(0, take);
     }
     return [track];
   };
@@ -100,6 +125,22 @@ test('catalog and album search are accessible as a guest', async () => {
     assert.equal((await response.json())[0].title, 'Sample');
   }
   assert.equal((await call('/tracks/search')).status, 400);
+});
+
+test('catalog pages advance by ID and track lookup is bounded', async () => {
+  const first = await (await call('/tracks?limit=1')).json();
+  assert.deepEqual(first.items.map(track => track.id), [2]);
+  assert.equal(first.nextCursor, 2);
+  const second = await (await call('/tracks?limit=1&before=2')).json();
+  assert.deepEqual(second.items.map(track => track.id), [1]);
+  assert.equal(second.nextCursor, null);
+  const search = await (await call('/tracks/search?query=Album&limit=1')).json();
+  assert.equal(search.nextCursor, 2);
+  const selected = await (await call('/tracks/by-ids?ids=2,2,999')).json();
+  assert.deepEqual(selected.map(track => track.id), [2]);
+  for (const suffix of ['?limit=101', '?before=0', '/by-ids?ids=1,zero', '/by-ids']) {
+    assert.equal((await call('/tracks' + suffix)).status, 400);
+  }
 });
 
 test('profile accepts a current bearer token and rejects missing or expired sessions', async () => {

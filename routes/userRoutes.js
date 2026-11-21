@@ -16,7 +16,9 @@ function requireSelfOrAdmin(req, res, next) {
 
 router.post('/register', limitCredentialAttempts, userController.register);
 router.post('/login', limitCredentialAttempts, userController.login);
-router.post('/logout', userController.logout);
+router.post('/logout', authenticateToken, userController.logout);
+router.get('/sessions', authenticateToken, userController.sessions);
+router.delete('/sessions/:id', authenticateToken, userController.revokeSession);
 router.put('/edit-pass', authenticateToken, limitCredentialAttempts, userController.edit_pass);
 router.put('/edit-username', authenticateToken, userController.edit_username);
 router.post('/uploadProfileImage', authenticateToken, uploadAvatar.single('profileImage'), userController.uploadProfileImage);

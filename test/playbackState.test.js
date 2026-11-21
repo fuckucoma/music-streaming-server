@@ -22,7 +22,7 @@ const active = {
 
 test('playback prediction stops advancing at the active lease deadline', () => {
   assert.equal(projectedPosition(active, at(3200)), 7.7);
-  assert.equal(projectedPosition(active, at(LEASE_MS + 60_000)), 16.5);
+  assert.equal(projectedPosition(active, at(LEASE_MS + 60_000)), active.position + LEASE_MS / 1_000);
   assert.equal(hasLiveLease(active, at(LEASE_MS - 1)), true);
   assert.equal(hasLiveLease(active, at(LEASE_MS)), false);
   assert.equal(presentSession(active, at(LEASE_MS)).playing, false);

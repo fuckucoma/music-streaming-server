@@ -1,6 +1,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const prisma = require('../lib/prisma');
+const { positiveInt } = require('../lib/validation');
 const {
   IMAGE_LIMIT, TrackError, trackId, publicStorageKey, legacyName, coverUrl,
   saveTracks, updateTrack, deleteTrack,
@@ -8,6 +9,8 @@ const {
 
 const tracksDirectory = path.join(__dirname, '..', 'public', 'tracks');
 const legacyAudioExtensions = new Set(['.mp3', '.mp2', '.flac', '.m4a', '.mp4', '.aac', '.ogg', '.oga', '.opus', '.wav', '.aiff']);
+const MAX_PAGE_SIZE = 100;
+const MAX_LOOKUP_IDS = 300;
 
 function serializeTrack(track) {
   return { ...track, imageUrl: coverUrl(track.imageUrl) };
@@ -17,6 +20,25 @@ function sendError(res, error, message) {
   if (error instanceof TrackError) return res.status(error.status).json({ error: error.message });
   console.error(message, error.code || error.name);
   return res.status(500).json({ error: message });
+}
+
+async function getTrackPage(query, where = {}) {
+  const limit = query.limit === undefined ? 40 : positiveInt(query.limit);
+  const before = query.before === undefined ? undefined : positiveInt(query.before);
+  if (!limit || limit > MAX_PAGE_SIZE || before === null) {
+    throw new TrackError(400, 'Invalid catalog page size or cursor');
+  }
+  const rows = await prisma.track.findMany({
+    where: before === undefined ? where : { ...where, id: { lt: before } },
+    orderBy: { id: 'desc' },
+    take: limit + 1,
+  });
+  const items = rows.slice(0, limit).map(serializeTrack);
+  return { items, nextCursor: rows.length > limit ? items.at(-1).id : null };
+}
+
+function requestedPage(query) {
+  return query.limit !== undefined || query.before !== undefined;
 }
 
 exports.addTrack = async (req, res) => {
@@ -35,6 +57,7 @@ exports.addTrack = async (req, res) => {
 
 exports.getTracks = async (req, res) => {
   try {
+    if (requestedPage(req.query)) return res.json(await getTrackPage(req.query));
     const tracks = await prisma.track.findMany();
     for (let i = tracks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -43,6 +66,21 @@ exports.getTracks = async (req, res) => {
     res.json(tracks.map(serializeTrack));
   } catch (error) {
     sendError(res, error, 'Failed to get tracks');
+  }
+};
+
+exports.getTracksByIds = async (req, res) => {
+  const ids = typeof req.query.ids === 'string' ? req.query.ids.split(',') : [];
+  if (!ids.length || ids.length > MAX_LOOKUP_IDS) {
+    return res.status(400).json({ error: 'Supply up to 300 track IDs' });
+  }
+  const parsed = ids.map(positiveInt);
+  if (parsed.includes(null)) return res.status(400).json({ error: 'Invalid track ID' });
+  try {
+    const tracks = await prisma.track.findMany({ where: { id: { in: [...new Set(parsed)] } } });
+    return res.json(tracks.map(serializeTrack));
+  } catch (error) {
+    return sendError(res, error, 'Failed to look up tracks');
   }
 };
 
@@ -86,13 +124,13 @@ exports.search = async (req, res) => {
   if (query.length > 300) return res.status(400).json({ error: 'Query is too long' });
   const searchTerm = query.replace(/[\\%_]/g, '\\$&');
   try {
-    const tracks = await prisma.track.findMany({
-      where: {
-        OR: ['title', 'artist', 'album'].map(field => ({
-          [field]: { contains: searchTerm, mode: 'insensitive' },
-        })),
-      },
-    });
+    const where = {
+      OR: ['title', 'artist', 'album'].map(field => ({
+        [field]: { contains: searchTerm, mode: 'insensitive' },
+      })),
+    };
+    if (requestedPage(req.query)) return res.json(await getTrackPage(req.query, where));
+    const tracks = await prisma.track.findMany({ where });
     res.json(tracks.map(serializeTrack));
   } catch (error) {
     sendError(res, error, 'Search failed');

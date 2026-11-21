@@ -25,6 +25,8 @@ Apply the Prisma migration before enabling Realtime in the frontend. On Supabase
 
 `GET /tracks/:id/stream` serves bundled legacy tracks with HTTP Range and redirects new tracks to Supabase Storage. The bot and administrator upload routes share file validation and metadata extraction.
 
+The website uses `GET /tracks?limit=40` and `GET /tracks/search?query=...&limit=40`. Each result includes `nextCursor`, which the client sends as `before` to continue. The player uses `GET /tracks/by-ids?ids=1,2` to resolve missing queue entries. Deleting a track removes it from affected shared queues.
+
 Run `npm test` for the HTTP API checks. They start an ephemeral loopback server with database fixtures.
 
 ## Shared playback
@@ -33,6 +35,6 @@ To connect an existing site login to Telegram, create a one-time code from the p
 
 The `/playback` API stores a versioned session per user and treats each open page as a playback device. The authenticated event stream sends updates to that user's devices. Devices can control the queue from any connected page. One device holds the audio lease at a time. Handoff pauses the outgoing device before granting the new lease and falls back to expiry when the outgoing device loses its connection.
 
-Apply both Prisma migrations before serving this version. The account-link, playback-session and device tables restrict direct reads from browser roles. The existing catalog uses Supabase Realtime. Playback events use authenticated HTTP streaming through Express. Keep response buffering disabled on any proxy in front of `/playback/events`.
+Apply pending Prisma migrations before serving a new version. The account-link, authentication-session, playback-session and device tables restrict direct reads from browser roles. The catalog uses Supabase Realtime. Playback events use authenticated HTTP streaming through Express. Keep response buffering disabled on any proxy in front of `/playback/events`.
 
-Set `TEST_DATABASE_URL` to a migrated disposable PostgreSQL database before running `npm test` to include the linked-account and two-device integration test.
+Set `TEST_DATABASE_URL` to a migrated disposable PostgreSQL database before running `npm test` to include all integration tests. The backend GitHub Actions workflow provisions and migrates a PostgreSQL service before running the suite.

@@ -1,14 +1,14 @@
 const express = require('express');
 const { authenticateToken, readAuthenticatedUser } = require('../middlewares/auth');
 const {
-  getSnapshot, registerDevice, heartbeat, acknowledge, applyCommand, subscribe, PlaybackError,
+  getSnapshot, registerDevice, removeDevice, heartbeat, acknowledge, applyCommand, PlaybackError,
 } = require('../services/playback');
+const { watchPlayback } = require('../services/playbackFeed');
 
 const router = express.Router();
 const owners = new Map();
 const MAX_STREAMS = 64;
 const MAX_OWNER_STREAMS = 8;
-const REFRESH_INTERVAL = 2_500;
 const KEEPALIVE_INTERVAL = 12_000;
 const STREAM_DURATION = 60_000;
 let openStreams = 0;
@@ -22,7 +22,7 @@ function playbackEndpoint(handler) {
   return async (req, res, next) => {
     const { userId } = req.user;
     try {
-      const snapshot = await handler(userId, req.body);
+      const snapshot = await handler(userId, req.body, req.params);
       res.json(snapshot);
     } catch (error) {
       if (!(error instanceof PlaybackError)) return next(error);
@@ -37,16 +37,9 @@ function playbackEndpoint(handler) {
   };
 }
 
-function eventVersion(snapshot) {
-  const { session, devices } = snapshot;
-  return JSON.stringify([
-    session.version, session.leaseUntil, session.playing, session.positionAt,
-    devices.map(device => [device.id, device.name, device.platform, device.lastSeenAt, device.online]),
-  ]);
-}
-
 router.get('/session', playbackEndpoint(getSnapshot));
 router.post('/devices', playbackEndpoint(registerDevice));
+router.delete('/devices/:deviceId', playbackEndpoint((userId, body, params) => removeDevice(userId, params.deviceId)));
 router.post('/heartbeat', playbackEndpoint(heartbeat));
 router.post('/ack', playbackEndpoint(acknowledge));
 router.post('/command', playbackEndpoint(applyCommand));
@@ -65,14 +58,14 @@ router.get('/events', (req, res) => {
     'X-Accel-Buffering': 'no',
   });
   let closed = false;
-  let refreshing = false;
-  let needsRefresh = false;
   let lastEvent;
+  let pendingFrame;
+  let delivering = false;
+  let unsubscribe = () => {};
 
   function finish() {
     if (closed) return;
     closed = true;
-    clearInterval(refreshTimer);
     clearInterval(keepaliveTimer);
     clearTimeout(expiryTimer);
     unsubscribe();
@@ -88,44 +81,36 @@ router.get('/events', (req, res) => {
     if (res.destroyed || !res.write(value)) finish();
   }
 
-  async function refresh() {
-    if (closed) return;
-    if (refreshing) {
-      needsRefresh = true;
-      return;
-    }
-    refreshing = true;
+  async function deliver(frame) {
+    pendingFrame = frame;
+    if (closed || delivering) return;
+    delivering = true;
     try {
-      do {
-        needsRefresh = false;
-        const snapshot = await getSnapshot(userId);
+      while (pendingFrame && !closed) {
+        const { key, payload } = pendingFrame;
+        pendingFrame = undefined;
+        if (key === lastEvent) continue;
+        const auth = await readAuthenticatedUser(req.headers.authorization);
         if (closed) return;
-        const version = eventVersion(snapshot);
-        if (version !== lastEvent) {
-          const auth = await readAuthenticatedUser(req.headers.authorization);
-          if (closed) return;
-          if (auth?.userId !== userId) return finish();
-          lastEvent = version;
-          send(`event: session\ndata: ${JSON.stringify(snapshot)}\n\n`);
-        }
-      } while (needsRefresh && !closed);
+        if (auth?.userId !== userId) return finish();
+        lastEvent = key;
+        send(payload);
+      }
     } catch (error) {
-      console.warn('Playback event stream refresh failed:', error.code || error.name);
+      console.warn('Playback event stream delivery failed:', error.code || error.name);
       finish();
     } finally {
-      refreshing = false;
+      delivering = false;
     }
   }
 
-  const unsubscribe = subscribe(userId, refresh);
-  const refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
   const keepaliveTimer = setInterval(() => send(': keepalive\n\n'), KEEPALIVE_INTERVAL);
   const expiryTimer = setTimeout(finish, STREAM_DURATION);
   res.once('close', finish);
   if (res.destroyed) return finish();
   res.flushHeaders();
   send('retry: 2000\n\n');
-  void refresh();
+  if (!closed) unsubscribe = watchPlayback(userId, deliver);
 });
 
 module.exports = router;

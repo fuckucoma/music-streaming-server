@@ -36,6 +36,8 @@ model User {
   telegramPhotoUrl String?
   telegramAuthVersion Int @default(0)
   telegramLinkCode TelegramLinkCode?
+  authSessionVersion Int @default(0)
+  authSessions AuthSession[]
 
   isAdmin         Boolean    @default(false)
   profileImageUrl String?
@@ -46,6 +48,26 @@ model User {
   reviews         Review[]
   playbackSession PlaybackSession?
   playbackDevices PlaybackDevice[]
+}
+
+enum AuthLoginMethod {
+  password
+  telegram
+}
+
+model AuthSession {
+  id                  String          @id @db.Uuid
+  userId              Int
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  method              AuthLoginMethod
+  authVersion         Int
+  telegramAuthVersion Int?
+  userAgent           String?         @db.VarChar(200)
+  createdAt           DateTime
+  expiresAt           DateTime
+  revokedAt           DateTime?
+
+  @@index([userId, expiresAt])
 }
 
 model TelegramLinkCode {
@@ -75,6 +97,9 @@ model PlaybackSession {
   positionAt      DateTime  @default(now())
   shuffle         Boolean   @default(false)
   repeat          String    @default("none")
+
+  @@index([trackId])
+  @@index([queue], type: Gin)
 }
 
 model PlaybackDevice {

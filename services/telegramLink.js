@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const { createHash, randomBytes } = require('node:crypto');
 const prisma = require('../lib/prisma');
+const { revokeUserAuthSessions } = require('./authSessions');
 const { cleanupUserAvatar } = require('./userAccounts');
 
 const LINK_LIFETIME_MS = 5 * 60_000;
@@ -81,7 +82,7 @@ async function linkAccounts(db, codeHash, telegramId, now) {
   if (duplicate && duplicate.id === target.id) {
     throw new TelegramLinkError(409, 'Telegram is already linked to this account');
   }
-  if (duplicate && (duplicate.isAdmin || target.isAdmin)) {
+  if (duplicate && (duplicate.isAdmin || target.isAdmin || duplicate.password != null)) {
     throw new TelegramLinkError(409, 'This Telegram account cannot be merged');
   }
   return { target, duplicate };
@@ -126,7 +127,7 @@ async function confirmTelegramLink(code, identity, confirmMerge) {
     const user = await tx.user.update({
       where: { id: target.id },
       data: { ...identity, profileImageUrl, telegramAuthVersion: { increment: 1 } },
-      select: { id: true, isAdmin: true, telegramId: true, telegramAuthVersion: true },
+      select: { id: true, isAdmin: true, telegramId: true, telegramAuthVersion: true, authSessionVersion: true },
     });
     return { user, unusedAvatar: duplicate?.profileImageUrl !== profileImageUrl ? duplicate : null };
   });
@@ -149,8 +150,9 @@ async function unlinkTelegram(userId, password) {
         telegramId: null, telegramName: null, telegramUsername: null, telegramPhotoUrl: null,
         telegramAuthVersion: { increment: 1 },
       },
-      select: { id: true, isAdmin: true },
+      select: { id: true, isAdmin: true, authSessionVersion: true },
     });
+    await revokeUserAuthSessions(tx, userId, 'telegram');
     await tx.telegramLinkCode.deleteMany({ where: { userId } });
     return user;
   });

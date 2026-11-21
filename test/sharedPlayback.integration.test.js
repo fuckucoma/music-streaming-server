@@ -114,6 +114,8 @@ test('linked devices share a queue, receive remote controls and hand off one out
   const start = await command(browser, desktop, home.session.version, {
     type: 'play', trackId: first, queue: [first, second], position: 12,
   });
+  assert.ok(start.session.leaseUntil - start.serverTime > 25_000);
+  assert.ok(start.session.leaseUntil - start.serverTime <= 30_000);
   const streamed = await read((snapshot) => snapshot.session.version === start.session.version);
   assert.equal(streamed.session.activeDeviceId, desktop.deviceId);
   assert.deepEqual(streamed.session.queue, [first, second]);
@@ -127,14 +129,29 @@ test('linked devices share a queue, receive remote controls and hand off one out
 
   const pause = await command(telegram, phone, start.session.version, { type: 'pause' });
   assert.equal((await api('/playback/session', { token: browser })).session.playing, false);
+  assert.equal(pause.session.activeDeviceId, desktop.deviceId);
+  assert.equal(pause.session.leaseUntil, corrected.session.leaseUntil);
   const resume = await command(telegram, phone, pause.session.version, { type: 'play' });
   assert.equal(resume.session.activeDeviceId, desktop.deviceId);
-  const handoff = await command(telegram, phone, resume.session.version, {
+  assert.equal(resume.session.leaseUntil, corrected.session.leaseUntil);
+  const seek = await command(telegram, phone, resume.session.version, { type: 'seek', position: 35 });
+  assert.equal(seek.session.activeDeviceId, desktop.deviceId);
+  assert.equal(seek.session.leaseUntil, corrected.session.leaseUntil);
+  assert.ok(seek.session.position >= 35);
+  const next = await command(telegram, phone, seek.session.version, { type: 'next' });
+  assert.equal(next.session.trackId, second);
+  assert.equal(next.session.activeDeviceId, desktop.deviceId);
+  assert.equal(next.session.leaseUntil, corrected.session.leaseUntil);
+  const handoff = await command(telegram, phone, next.session.version, {
     type: 'transfer', targetDeviceId: phone.deviceId,
   });
   assert.equal(handoff.session.activeDeviceId, desktop.deviceId);
   assert.equal(handoff.session.pendingDeviceId, phone.deviceId);
   assert.equal(handoff.session.playing, false);
+  const pending = await api('/playback/heartbeat', { token: telegram, body: phone });
+  assert.equal(pending.session.activeDeviceId, desktop.deviceId);
+  assert.equal(pending.session.leaseUntil, handoff.session.leaseUntil);
+  assert.equal(pending.session.playing, false);
   await api('/playback/ack', {
     token: telegram,
     body: { ...phone, expectedVersion: handoff.session.version },
@@ -174,11 +191,38 @@ test('linked devices share a queue, receive remote controls and hand off one out
   assert.deepEqual(isolated.devices, []);
   await command(otherToken, desktop, recovered.session.version, { type: 'pause' }, 403);
 
+  const stale = device('Old tab', 'browser');
+  await api('/playback/devices', { token: browser, body: stale });
+  const removePath = '/playback/devices/' + stale.deviceId;
+  await api(removePath, { token: otherToken, method: 'DELETE', status: 404 });
+  await api(removePath, { token: browser, method: 'DELETE', status: 409 });
+  await prisma.playbackDevice.update({
+    where: { userId_id: { userId: siteProfile.id, id: stale.deviceId } },
+    data: { lastSeenAt: new Date(Date.now() - 70_000) },
+  });
+  const pruned = await api(removePath, { token: browser, method: 'DELETE' });
+  assert.equal(pruned.devices.some((device) => device.id === stale.deviceId), false);
+  assert.equal(pruned.session.activeDeviceId, desktop.deviceId);
+  assert.equal(pruned.session.leaseUntil, recovered.session.leaseUntil);
+
   await api('/auth/telegram/link', { token: browser, body: { password }, method: 'DELETE' });
   await api('/playback/session', { token: telegram, status: 401 });
-  const changed = await command(browser, desktop, recovered.session.version, { type: 'pause' });
+  const changed = await command(browser, desktop, pruned.session.version, { type: 'pause' });
   await assert.rejects(read((snapshot) => snapshot.session.version === changed.session.version),
     /The event stream closed before the expected state arrived/);
+
+  await prisma.playbackSession.update({
+    where: { userId: siteProfile.id },
+    data: { leaseUntil: new Date(Date.now() - 1_000) },
+  });
+  await prisma.playbackDevice.update({
+    where: { userId_id: { userId: siteProfile.id, id: desktop.deviceId } },
+    data: { lastSeenAt: new Date(Date.now() - 70_000) },
+  });
+  const removedExpired = await api('/playback/devices/' + desktop.deviceId, { token: browser, method: 'DELETE' });
+  assert.equal(removedExpired.session.activeDeviceId, null);
+  assert.equal(removedExpired.session.leaseUntil, null);
+  assert.equal(removedExpired.session.playing, false);
 });
 
 function signedTelegramLaunch(id) {

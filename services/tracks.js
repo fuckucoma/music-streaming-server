@@ -2,6 +2,7 @@ const { randomUUID } = require('node:crypto');
 const { createReadStream } = require('node:fs');
 const path = require('node:path');
 const prisma = require('../lib/prisma');
+const { publishPlaybackChange } = require('./playback');
 const { positiveInt } = require('../lib/validation');
 const { detectImageType } = require('./images');
 
@@ -202,19 +203,49 @@ async function updateTrack(value, fields) {
 
 async function deleteTrack(value) {
   const id = trackId(value);
-  let track;
+  let removal;
   try {
-    track = await prisma.$transaction(async tx => {
+    removal = await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT "id" FROM "Track" WHERE "id" = ${id} FOR UPDATE`;
+      const sessions = await tx.$queryRaw`
+        SELECT "userId", "trackId", "queue", "shuffleOrder" FROM "PlaybackSession"
+        WHERE "trackId" = ${id} OR "queue" @> ARRAY[${id}]::integer[]
+        ORDER BY "userId" FOR UPDATE
+      `;
+      for (const session of sessions) {
+        const before = session.queue ?? [];
+        const queue = before.filter(trackId => trackId !== id);
+        const indices = new Map(queue.map((trackId, index) => [trackId, index]));
+        const shuffleOrder = (session.shuffleOrder ?? [])
+          .map(index => indices.get(before[index]))
+          .filter(index => index !== undefined);
+        const currentRemoved = session.trackId === id;
+        await tx.playbackSession.update({
+          where: { userId: session.userId },
+          data: {
+            queue,
+            queueIndex: currentRemoved ? -1 : indices.get(session.trackId) ?? -1,
+            shuffleOrder,
+            version: { increment: 1 },
+            ...(currentRemoved && {
+              trackId: null, duration: null, playing: false, handoffResume: false,
+              position: 0, positionAt: new Date(),
+            }),
+          },
+        });
+      }
       await tx.favorite.deleteMany({ where: { trackId: id } });
       await tx.review.deleteMany({ where: { trackId: id } });
-      return tx.track.delete({ where: { id } });
+      const track = await tx.track.delete({ where: { id } });
+      return { track, userIds: sessions.map(session => session.userId) };
     });
   } catch (error) {
     if (error.code === 'P2025') throw new TrackError(404, 'Track not found');
     throw error;
   }
-  const audio = publicStorageKey(track.filename, 'tracks');
-  const cover = publicStorageKey(track.imageUrl, 'images');
+  removal.userIds.forEach(userId => publishPlaybackChange(userId));
+  const audio = publicStorageKey(removal.track.filename, 'tracks');
+  const cover = publicStorageKey(removal.track.imageUrl, 'images');
   const objects = [];
   if (audio) objects.push({ name: 'tracks', key: audio });
   if (cover) objects.push({ name: 'images', key: cover });
