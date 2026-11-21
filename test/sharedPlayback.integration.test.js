@@ -94,8 +94,15 @@ test('linked devices share a queue, receive remote controls and hand off one out
 
   const desktop = device('Desktop', 'browser');
   const phone = device('Telegram', 'telegram');
+  const initial = await api('/playback/session', { token: browser });
+  assert.deepEqual(initial.devices, []);
+  assert.equal(initial.session.trackId, null);
+  assert.equal(initial.session.version, 0);
   await api('/playback/devices', { token: browser, body: desktop });
   const home = await api('/playback/devices', { token: telegram, body: phone });
+  assert.equal(home.devices.length, 2);
+  assert.ok(home.devices.every((device) => device.online && Number.isSafeInteger(device.lastSeenAt)));
+  assert.ok(home.devices.every((device) => !('keyHash' in device)));
   const stream = await fetch(base + '/playback/events', {
     headers: { Authorization: `Bearer ${telegram}`, Accept: 'text/event-stream' },
     signal: events.signal,

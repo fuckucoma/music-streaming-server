@@ -11,6 +11,7 @@ const {
 const MAX_DEVICES = 20;
 const DEVICE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 const PRESENCE_WRITE_INTERVAL = 10_000;
+const WRITE_TRANSACTION_OPTIONS = { timeout: 10_000 };
 const platforms = new Set(['browser', 'telegram']);
 const events = new EventEmitter();
 
@@ -72,28 +73,33 @@ function isOnline(device, now) {
 }
 
 async function lockSession(db, userId) {
-  await db.$queryRaw`SELECT "userId" FROM "PlaybackSession" WHERE "userId" = ${userId} FOR UPDATE`;
-  return db.playbackSession.findUnique({ where: { userId } });
+  const [session] = await db.$queryRaw`
+    SELECT * FROM "PlaybackSession" WHERE "userId" = ${userId} FOR UPDATE`;
+  return session;
 }
 
 async function getSnapshot(userId) {
-  const [session, devices] = await Promise.all([
-    prisma.playbackSession.findUnique({ where: { userId } }),
-    prisma.playbackDevice.findMany({
-      where: { userId },
-      select: { id: true, name: true, platform: true, lastSeenAt: true },
-      orderBy: [{ lastSeenAt: 'desc' }, { id: 'asc' }],
-      take: MAX_DEVICES,
-    }),
-  ]);
-  const now = await databaseTime();
+  // Read both parts of the response in one round trip and one PostgreSQL snapshot.
+  const [{ now, devices, ...session }] = await prisma.$queryRaw`
+    SELECT clock_timestamp() AS "now", session.*, COALESCE((
+      SELECT json_agg(device ORDER BY device."lastSeenAt" DESC, device.id)
+      FROM (
+        SELECT id, name, platform, (EXTRACT(EPOCH FROM "lastSeenAt") * 1000)::bigint AS "lastSeenAt"
+        FROM "PlaybackDevice"
+        WHERE "userId" = ${userId}
+        ORDER BY "lastSeenAt" DESC, id
+        LIMIT ${MAX_DEVICES}
+      ) device
+    ), '[]'::json) AS devices
+    FROM (VALUES (${userId}::integer)) AS owner(id)
+    LEFT JOIN "PlaybackSession" session ON session."userId" = owner.id`;
+  const serverTime = now.getTime();
   return {
-    serverTime: now.getTime(),
-    session: presentSession(session ?? emptySession, now),
+    serverTime,
+    session: presentSession(session.userId === null ? emptySession : session, now),
     devices: devices.map(device => ({
       ...device,
-      lastSeenAt: device.lastSeenAt.getTime(),
-      online: isOnline(device, now),
+      online: serverTime - device.lastSeenAt < ONLINE_MS,
     })),
   };
 }
@@ -139,7 +145,7 @@ async function registerDevice(userId, body) {
       await tx.playbackSession.update({ where: { userId }, data: { version: { increment: 1 } } });
     }
     await tx.playbackDevice.create({ data: { ...data, ...credentials, userId } });
-  });
+  }, WRITE_TRANSACTION_OPTIONS);
   return changedSnapshot(userId);
 }
 
@@ -176,34 +182,39 @@ async function removeDevice(userId, targetDeviceId) {
 
 async function verifyDevice(userId, body, touch = false) {
   const credentials = deviceCredentials(body);
-  const device = await prisma.playbackDevice.findUnique({ where: deviceWhere(userId, credentials.id) });
+  const where = deviceWhere(userId, credentials.id);
+  const device = touch
+    ? (await prisma.$queryRaw`
+        SELECT "keyHash", "lastSeenAt", clock_timestamp() AS "now"
+        FROM "PlaybackDevice" WHERE "userId" = ${userId} AND id = ${credentials.id}::uuid`)[0]
+    : await prisma.playbackDevice.findUnique({ where });
   if (!matchesDevice(device, credentials)) throw new PlaybackError(403, 'Unknown playback device');
   if (touch) {
-    const now = await databaseTime();
+    const { now } = device;
     if (now.getTime() - device.lastSeenAt.getTime() >= PRESENCE_WRITE_INTERVAL) {
       const touched = await prisma.playbackDevice.updateMany({
-        where: { userId, id: device.id, keyHash: credentials.keyHash, lastSeenAt: { lt: now } },
+        where: { userId, id: credentials.id, keyHash: credentials.keyHash, lastSeenAt: { lt: now } },
         data: { lastSeenAt: now },
       });
       if (!touched.count) {
-        const current = await prisma.playbackDevice.findUnique({ where: deviceWhere(userId, credentials.id) });
+        const current = await prisma.playbackDevice.findUnique({ where });
         if (!matchesDevice(current, credentials)) throw new PlaybackError(403, 'Unknown playback device');
       }
     }
   }
-  return device.id;
+  return credentials.id;
 }
 
 async function mutateSession(userId, version, transition, lockTracks = false) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const update = async db => {
-      const session = await db.playbackSession.findUnique({ where: { userId } });
+      const [session] = await db.$queryRaw`
+        SELECT *, clock_timestamp() AS "now" FROM "PlaybackSession" WHERE "userId" = ${userId}`;
       if (!session) throw new PlaybackError(403, 'No registered playback session');
       if (version !== undefined && session.version !== version) {
         throw new PlaybackError(409, 'Playback session changed');
       }
-      const now = await databaseTime(db);
-      const mutation = await transition(session, now, db);
+      const mutation = await transition(session, session.now, db);
       if (!mutation) return true;
       const { changes, extendOnly } = mutation;
       const result = await db.playbackSession.updateMany({
@@ -216,7 +227,7 @@ async function mutateSession(userId, version, transition, lockTracks = false) {
       });
       return result.count === 1;
     };
-    if (lockTracks ? await prisma.$transaction(update) : await update(prisma)) return;
+    if (lockTracks ? await prisma.$transaction(update, WRITE_TRANSACTION_OPTIONS) : await update(prisma)) return;
   }
   throw new PlaybackError(409, 'Playback session changed');
 }
