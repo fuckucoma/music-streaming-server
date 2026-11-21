@@ -23,6 +23,7 @@ const track = {
   id: 1, title: 'Sample', artist: 'Artist', album: 'Album', duration: 90,
   imageUrl: null, filename: legacyFile,
 };
+const storedTrack = { ...track, id: 2, filename: storedFile };
 const user = { id: 7, username: 'listener', isAdmin: false, profileImageUrl: null, authSessionVersion: 0 };
 const memberToken = issueToken(user);
 const authSessions = new Map();
@@ -62,7 +63,7 @@ before(async () => {
   };
   prisma.track.findUnique = async ({ where }) => {
     if (where.id === 1) return track;
-    if (where.id === 2) return { ...track, id: 2, filename: storedFile };
+    if (where.id === 2) return storedTrack;
     return null;
   };
   prisma.track.findMany = async ({ where, orderBy, take } = {}) => {
@@ -70,11 +71,12 @@ before(async () => {
       assert.deepEqual(where.OR.map((rule) => Object.keys(rule)[0]), ['title', 'artist', 'album']);
     }
     if (where?.id?.in) {
-      return [track, { ...track, id: 2 }].filter(x => where.id.in.includes(x.id));
+      const foreignTrack = { ...track, id: 3, filename: storedFile.replace('storage.example.test', 'unrelated.example.test') };
+      return [track, storedTrack, foreignTrack].filter(x => where.id.in.includes(x.id));
     }
     if (orderBy) {
       assert.deepEqual(orderBy, { id: 'desc' });
-      return [{ ...track, id: 2 }, track].filter(x => x.id < (where.id?.lt ?? Infinity)).slice(0, take);
+      return [storedTrack, track].filter(x => x.id < (where.id?.lt ?? Infinity)).slice(0, take);
     }
     return [track];
   };
@@ -87,7 +89,7 @@ before(async () => {
   prisma.favorite.findUnique = async () => favorite;
   prisma.favorite.findMany = async ({ where }) => {
     assert.equal(where.userId, user.id);
-    return favorite ? [{ favoriteId: favorite.favoriteId, trackId: favorite.trackId, track }] : [];
+    return favorite ? [{ favoriteId: favorite.favoriteId, trackId: favorite.trackId, track: await prisma.track.findUnique({ where: { id: favorite.trackId } }) }] : [];
   };
   prisma.favorite.deleteMany = async ({ where }) => {
     assert.equal(where.userId, user.id);
@@ -130,14 +132,20 @@ test('catalog and album search are accessible as a guest', async () => {
 test('catalog pages advance by ID and track lookup is bounded', async () => {
   const first = await (await call('/tracks?limit=1')).json();
   assert.deepEqual(first.items.map(track => track.id), [2]);
+  assert.equal(first.items[0].streamUrl, storedFile);
   assert.equal(first.nextCursor, 2);
   const second = await (await call('/tracks?limit=1&before=2')).json();
   assert.deepEqual(second.items.map(track => track.id), [1]);
+  assert.equal(second.items[0].streamUrl, null);
   assert.equal(second.nextCursor, null);
   const search = await (await call('/tracks/search?query=Album&limit=1')).json();
   assert.equal(search.nextCursor, 2);
+  assert.equal(search.items[0].streamUrl, storedFile);
   const selected = await (await call('/tracks/by-ids?ids=2,2,999')).json();
   assert.deepEqual(selected.map(track => track.id), [2]);
+  assert.equal(selected[0].streamUrl, storedFile);
+  const [foreign] = await (await call('/tracks/by-ids?ids=3')).json();
+  assert.equal(foreign.streamUrl, null);
   for (const suffix of ['?limit=101', '?before=0', '/by-ids?ids=1,zero', '/by-ids']) {
     assert.equal((await call('/tracks' + suffix)).status, 400);
   }
@@ -206,6 +214,10 @@ test('favorites are scoped to a user and repeated changes are safe', async () =>
   assert.equal((await call('/favorites/remove', { ...session, payload })).status, 200);
   assert.equal((await call('/favorites/remove', { ...session, payload })).status, 200);
   assert.deepEqual(await (await call('/favorites/get', session)).json(), { favorites: [] });
+  await call('/favorites/add', { ...session, payload: { trackId: 2 } });
+  const { favorites } = await (await call('/favorites/get', session)).json();
+  assert.equal(favorites[0].streamUrl, storedFile);
+  await call('/favorites/remove', { ...session, payload: { trackId: 2 } });
 });
 
 test('the legacy stream serves bytes and the storage stream redirects to the CDN', async () => {

@@ -177,6 +177,10 @@ function coverUrl(value) {
   return name ? `/images/${encodeURIComponent(name)}` : null;
 }
 
+function publicAudioUrl(filename) {
+  return publicStorageKey(filename, 'tracks') ? filename : null;
+}
+
 async function updateTrack(value, fields) {
   const id = trackId(value);
   const data = {};
@@ -254,5 +258,5 @@ async function deleteTrack(value) {
 
 module.exports = {
   AUDIO_LIMIT, BATCH_LIMIT, IMAGE_LIMIT, MAX_TRACKS,
-  TrackError, trackId, publicStorageKey, legacyName, coverUrl, saveTracks, updateTrack, deleteTrack,
+  TrackError, trackId, publicAudioUrl, legacyName, coverUrl, saveTracks, updateTrack, deleteTrack,
 };

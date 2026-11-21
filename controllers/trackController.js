@@ -3,7 +3,7 @@ const path = require('node:path');
 const prisma = require('../lib/prisma');
 const { positiveInt } = require('../lib/validation');
 const {
-  IMAGE_LIMIT, TrackError, trackId, publicStorageKey, legacyName, coverUrl,
+  IMAGE_LIMIT, TrackError, trackId, publicAudioUrl, legacyName, coverUrl,
   saveTracks, updateTrack, deleteTrack,
 } = require('../services/tracks');
 
@@ -13,7 +13,7 @@ const MAX_PAGE_SIZE = 100;
 const MAX_LOOKUP_IDS = 300;
 
 function serializeTrack(track) {
-  return { ...track, imageUrl: coverUrl(track.imageUrl) };
+  return { ...track, imageUrl: coverUrl(track.imageUrl), streamUrl: publicAudioUrl(track.filename) };
 }
 
 function sendError(res, error, message) {
@@ -90,8 +90,9 @@ exports.streamTrack = async (req, res, next) => {
     const track = await prisma.track.findUnique({ where: { id } });
     if (!track) throw new TrackError(404, 'Track not found');
     res.set('X-Content-Type-Options', 'nosniff');
-    if (publicStorageKey(track.filename, 'tracks')) {
-      return res.redirect(302, track.filename);
+    const streamUrl = publicAudioUrl(track.filename);
+    if (streamUrl) {
+      return res.redirect(302, streamUrl);
     }
 
     const name = legacyName(track.filename, 'tracks');

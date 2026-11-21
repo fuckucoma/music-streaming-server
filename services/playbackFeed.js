@@ -37,28 +37,46 @@ function createFeed(userId) {
   let closed = false;
   let refreshTimer;
   let deliveryTimer;
+  let immediateDelivery = false;
 
   function schedule(delay) {
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(refresh, delay);
   }
 
-  function queueDelivery() {
+  function deliver() {
+    if (closed) return;
+    const key = eventKey(latest);
+    if (key === lastKey) return;
+    lastKey = key;
+    const frame = { key, payload: `event: session\ndata: ${JSON.stringify(latest)}\n\n` };
+    for (const listener of listeners) listener(frame);
+  }
+
+  function queueDelivery(versionChanged) {
+    if (immediateDelivery) return;
+    if (versionChanged) {
+      clearTimeout(deliveryTimer);
+      deliveryTimer = undefined;
+      immediateDelivery = true;
+      queueMicrotask(() => {
+        immediateDelivery = false;
+        deliver();
+      });
+      return;
+    }
     if (deliveryTimer) return;
     deliveryTimer = setTimeout(() => {
       deliveryTimer = undefined;
-      const key = eventKey(latest);
-      if (key === lastKey) return;
-      lastKey = key;
-      const frame = { key, payload: `event: session\ndata: ${JSON.stringify(latest)}\n\n` };
-      for (const listener of listeners) listener(frame);
+      deliver();
     }, COALESCE_MS);
   }
 
   function accept(snapshot) {
     if (closed || isOlder(snapshot, latest)) return;
+    const versionChanged = latest && snapshot.session.version !== latest.session.version;
     latest = snapshot;
-    queueDelivery();
+    queueDelivery(versionChanged);
     if (!refreshing && !invalidated) schedule(FALLBACK_MS);
   }
 

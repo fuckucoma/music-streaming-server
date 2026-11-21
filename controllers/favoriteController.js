@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { positiveInt } = require('../lib/validation');
+const { publicAudioUrl } = require('../services/tracks');
 
 exports.addFavorite = async (req, res) => {
   const trackId = positiveInt(req.body?.trackId);
@@ -43,6 +44,8 @@ exports.getFavorites = async (req, res) => {
     orderBy: { favoriteId: 'desc' },
   });
   return res.json({
-    favorites: favorites.map(({ track, ...favorite }) => ({ ...favorite, ...track })),
+    favorites: favorites.map(({ track, ...favorite }) => ({
+      ...favorite, ...track, streamUrl: publicAudioUrl(track.filename),
+    })),
   });
 };

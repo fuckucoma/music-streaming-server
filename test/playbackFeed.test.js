@@ -57,15 +57,22 @@ test('same-owner SSE streams reuse one read and coalesce local snapshots', async
   source.emit('12', snapshot(1));
   source.emit('12', snapshot(2));
   source.emit('12', snapshot(1, 60_000, 30_000));
-  t.mock.timers.tick(40);
+  await Promise.resolve();
   assert.equal(reads, 1);
   assert.deepEqual(a.map(value => value.session.version), [0, 2]);
   assert.deepEqual(b, a);
+
+  source.emit('12', snapshot(2, 70_000, 30_000));
+  await Promise.resolve();
+  assert.equal(a.length, 2, 'heartbeat delivery is still coalesced');
+  t.mock.timers.tick(40);
+  assert.equal(a.at(-1).session.leaseUntil, 70_000);
 
   view = snapshot(3);
   source.emit('12');
   source.emit('12');
   t.mock.timers.tick(40);
+  await Promise.resolve();
   await Promise.resolve();
   t.mock.timers.tick(40);
   assert.equal(reads, 2);
@@ -73,6 +80,7 @@ test('same-owner SSE streams reuse one read and coalesce local snapshots', async
 
   view = snapshot(4);
   t.mock.timers.tick(10_000);
+  await Promise.resolve();
   await Promise.resolve();
   t.mock.timers.tick(40);
   assert.equal(reads, 3);
