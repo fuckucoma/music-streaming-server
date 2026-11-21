@@ -183,13 +183,27 @@ test('the legacy stream serves bytes and the storage stream redirects to the CDN
   assert.equal((await call('/tracks/3/stream')).status, 404);
 });
 
-test('CORS preflight allows the app origin and refuses unknown origins', async () => {
-  for (const origin of ['https://underlab-phi.vercel.app', 'https://unrelated.vercel.app']) {
-    const response = await call('/users/profile', {
-      method: 'OPTIONS',
-      headers: { Origin: origin, 'Access-Control-Request-Method': 'GET' },
-    });
-    assert.equal(response.headers.get('access-control-allow-origin'),
-      origin === 'https://underlab-phi.vercel.app' ? origin : null);
+test('catalog and playback CORS allow the canonical site and redirect alias only', async () => {
+  const allowed = ['https://muisicunderlab.vercel.app', 'https://underlab-phi.vercel.app'];
+  for (const origin of [...allowed, 'https://unrelated.vercel.app']) {
+    const [catalog, playback] = await Promise.all([
+      call('/tracks', { headers: { Origin: origin } }),
+      call('/playback/devices', {
+        method: 'OPTIONS',
+        headers: {
+          Origin: origin,
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'authorization,content-type',
+        },
+      }),
+    ]);
+    assert.equal(catalog.status, 200);
+    const expectedOrigin = allowed.includes(origin) ? origin : null;
+    assert.equal(catalog.headers.get('access-control-allow-origin'), expectedOrigin);
+    assert.equal(playback.headers.get('access-control-allow-origin'), expectedOrigin);
+    if (expectedOrigin) {
+      assert.equal(playback.status, 204);
+      assert.match(playback.headers.get('access-control-allow-headers'), /\bAuthorization\b/i);
+    }
   }
 });

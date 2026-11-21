@@ -12,6 +12,7 @@ function createApp({ logRequests = true } = {}) {
   if (Number.isInteger(proxyHops) && proxyHops > 0) app.set('trust proxy', proxyHops);
 
   const allowedOrigins = new Set([
+    'https://muisicunderlab.vercel.app',
     'https://underlab-phi.vercel.app',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
