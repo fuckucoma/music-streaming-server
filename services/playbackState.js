@@ -40,6 +40,10 @@ function projectedPosition(session, now) {
 }
 
 function presentSession(session, now) {
+  const nextTrackId = session.queue[navigationCandidates(session, 'next', false)[0]] ?? null;
+  const endedTrackId = session.repeat === 'one' ? session.trackId
+    : session.repeat === 'all' ? nextTrackId
+    : session.queue[navigationCandidates(session, 'ended', true)[0]] ?? null;
   return {
     version: session.version,
     timelineRevision: session.timelineRevision,
@@ -50,8 +54,11 @@ function presentSession(session, now) {
     duration: session.duration,
     queue: session.queue,
     queueIndex: session.queueIndex,
+    nextTrackId,
+    endedTrackId,
     playing: !session.pendingDeviceId && hasLiveLease(session, now) && session.playing,
     position: projectedPosition(session, now),
+    anchorPosition: session.position,
     positionAt: session.positionAt.getTime(),
     shuffle: session.shuffle,
     repeat: session.repeat,

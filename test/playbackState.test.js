@@ -44,6 +44,11 @@ test('natural end respects saved shuffle order and repeats only in repeat-all mo
   assert.deepEqual(navigationCandidates({ ...shuffled, repeat: 'all' }, 'ended', true), [0, 2, 1]);
   assert.deepEqual(navigationCandidates(shuffled, 'next', false), [0, 2, 1]);
   assert.equal(navigationCandidates(shuffled, 'previous', false)[0], 2);
+  assert.equal(presentSession({ ...shuffled, queueIndex: 0 }, start).endedTrackId, 14);
+  assert.equal(presentSession(shuffled, start).endedTrackId, null);
+  assert.equal(presentSession(shuffled, start).nextTrackId, 12);
+  assert.equal(presentSession({ ...shuffled, repeat: 'all' }, start).endedTrackId, 12);
+  assert.equal(presentSession({ ...shuffled, trackId: 13, repeat: 'one' }, start).endedTrackId, 13);
   const order = shuffledOrder(shuffled.queue, 1);
   assert.equal(order[0], 1);
   assert.deepEqual([...order].sort(), [0, 1, 2]);

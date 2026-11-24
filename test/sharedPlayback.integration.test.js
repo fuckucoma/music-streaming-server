@@ -169,10 +169,12 @@ test('linked devices share a queue, receive remote controls and hand off one out
   assert.notEqual(legacySeek.session.timelineRevision, seekId);
   const restarted = await command(telegram, phone, legacySeek.session.version, { type: 'previous' });
   assert.equal(restarted.session.trackId, first);
+  assert.equal(restarted.session.nextTrackId, second);
   assert.ok(restarted.session.position < 3);
   assert.notEqual(restarted.session.timelineRevision, seekId);
   const next = await command(telegram, phone, restarted.session.version, { type: 'next' });
   assert.equal(next.session.trackId, second);
+  assert.equal(next.session.anchorPosition, 0);
   assert.equal(next.session.activeDeviceId, desktop.deviceId);
   assert.equal(next.session.leaseUntil, staleReport.session.leaseUntil);
   assert.notEqual(next.session.timelineRevision, seekId);
@@ -191,6 +193,19 @@ test('linked devices share a queue, receive remote controls and hand off one out
     body: { ...phone, expectedVersion: handoff.session.version },
     status: 403,
   });
+  const { subscribe } = require('../services/playback');
+  let stopWaiting;
+  const receiverWaiting = new Promise(resolve => {
+    stopWaiting = subscribe(siteProfile.id, snapshot => {
+      if (snapshot?.session.pendingDeviceId === phone.deviceId) resolve();
+    });
+  });
+  t.after(() => stopWaiting());
+  const incoming = api('/playback/heartbeat', {
+    token: telegram, body: { ...phone, waitForHandoff: true },
+  });
+  await receiverWaiting;
+  stopWaiting();
   const switched = await api('/playback/ack', {
     token: browser,
     body: {
@@ -201,6 +216,10 @@ test('linked devices share a queue, receive remote controls and hand off one out
   assert.equal(switched.session.activeDeviceId, phone.deviceId);
   assert.equal(switched.session.pendingDeviceId, null);
   assert.equal(switched.session.playing, true);
+  assert.equal(switched.session.anchorPosition, 16);
+  const confirmation = await incoming;
+  assert.equal(confirmation.session.version, switched.session.version);
+  assert.equal(confirmation.session.activeDeviceId, phone.deviceId);
   assert.notEqual(switched.session.timelineRevision, next.session.timelineRevision);
   assert.ok(switched.session.position >= 16);
   await command(browser, desktop, resume.session.version, { type: 'pause' }, 409);

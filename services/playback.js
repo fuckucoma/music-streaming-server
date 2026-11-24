@@ -270,7 +270,31 @@ async function heartbeat(userId, body) {
     }
     return null;
   });
-  return changedSnapshot(userId);
+  if (body.waitForHandoff !== true) return changedSnapshot(userId);
+
+  let grant;
+  let wake;
+  let pendingVersion;
+  let timer;
+  const unsubscribe = subscribe(userId, snapshot => {
+    if (snapshot?.session.activeDeviceId !== deviceId || snapshot.session.pendingDeviceId) return;
+    if (!grant || snapshot.session.version > grant.session.version) grant = snapshot;
+    if (grant.session.version > pendingVersion) wake?.(grant);
+  });
+  try {
+    const snapshot = await changedSnapshot(userId);
+    if (snapshot.session.pendingDeviceId !== deviceId) return snapshot;
+    pendingVersion = snapshot.session.version;
+    if (grant?.session.version > snapshot.session.version) return grant;
+    // The receiver already has an authenticated request in flight while the old output stops.
+    return await new Promise(resolve => {
+      wake = resolve;
+      timer = setTimeout(() => resolve(snapshot), 2_500);
+    });
+  } finally {
+    clearTimeout(timer);
+    unsubscribe();
+  }
 }
 
 async function acknowledge(userId, body) {
